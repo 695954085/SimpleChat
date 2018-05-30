@@ -1,0 +1,34 @@
+const express = require('express');
+const User = require('../model/user');
+const formidable = require('formidable');
+const bodyParser = require('body-parser');
+const util = require('util');
+// create application/x-www-form-urlencoded parser
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
+var router = express.Router();
+
+//获取用户列表数据
+router.get('/user', function (req, res, next) {
+
+});
+//获取某一个用户数据
+router.get('/user/:id', function (req, res, next) {
+
+});
+
+//注册某一个用户
+router.post('/user', urlencodedParser, function (req, res, next) {
+  var body = req.body;
+  res.end(util.inspect(body));
+})
+//修改用户数据
+router.put('/user', function (req, res, next) {
+
+})
+//删除用户数据
+router.delete('/user', function (req, res, next) {
+
+})
+
+module.exports = router;
+

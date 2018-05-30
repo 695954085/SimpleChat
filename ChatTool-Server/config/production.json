@@ -1,0 +1,7 @@
+{
+  "Customer": {
+    "dbConfig": {
+      "mongodb": "mongodb://localhost/simplechat2"
+    }
+  }
+}
