@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const config = require('config');
 
-console.log(config.get('Customer.dbConfig.mongodb'))
-console.log(process.env.NODE_ENV);
 mongoose.connect(config.get('Customer.dbConfig.mongodb'));
 
 var db = mongoose.connection;

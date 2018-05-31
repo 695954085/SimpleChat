@@ -2,7 +2,7 @@ const express = require('express');
 const User = require('../model/user');
 const formidable = require('formidable');
 const bodyParser = require('body-parser');
-const util = require('util');
+const admin = require('../controller/admin');
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var router = express.Router();
@@ -17,10 +17,7 @@ router.get('/user/:id', function (req, res, next) {
 });
 
 //注册某一个用户
-router.post('/user', urlencodedParser, function (req, res, next) {
-  var body = req.body;
-  res.end(util.inspect(body));
-})
+router.post('/user', urlencodedParser, admin.register)
 //修改用户数据
 router.put('/user', function (req, res, next) {
 

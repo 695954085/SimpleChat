@@ -2,6 +2,7 @@
   "Customer":{
     "dbConfig":{
       "mongodb": "mongodb://localhost/simplechat"
-    }
+    },
+    "jwtSecret":"The UI of SimpleChat is based on WeChat"
   }
 }
