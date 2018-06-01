@@ -27,15 +27,17 @@ userSchema.pre('save', function (next) {
   // 如果这个model是新的，就意味着注册新用户；或者是修改密码。密码都是需要进行hash
   if (this.isNew || this.isModified('password')) {
     // 进行密码hash
-    bcrypt.hash(this.password, 10, function (err, hash) {
+    bcrypt.hash(this.password, 10, (err, hash) => {
       // Store hash in your password DB.
       if (err) {
         next(err);
         return;
       }
+      this.password = hash;
       next();
     });
   }
+  next();
 })
 
 var User = mongoose.model('User', userSchema);

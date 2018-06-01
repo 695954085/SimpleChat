@@ -3,10 +3,11 @@ const User = require('../model/user');
 const createError = require('http-errors');
 const jwt = require('jsonwebtoken');
 const config = require('config');
+const _ = require('lodash');
 
 function Admin() {
-  this.register = Admin.prototype.register.bind(this);
-  this.login = Admin.prototype.login.bind(this);
+  // this.register = Admin.prototype.register.bind(this);
+  // this.login = Admin.prototype.login.bind(this);
 }
 
 Admin.prototype.login = function (req, res, next) {
@@ -47,7 +48,8 @@ Admin.prototype.login = function (req, res, next) {
           var content = {
             username: user.username,
             avatar: user.avatar,
-            id: user._id
+            id: user._id,
+            token: token
           }
           res.send(content);
         })
@@ -85,6 +87,33 @@ Admin.prototype.register = function (req, res, next) {
       }
     });
   });
+}
+
+// 用户退出登录
+Admin.prototype.signOut = function (req, res, next) {
+  // 删除token？ 
+  // 1. 如果登出也认证token，那么如果token已经过期了，那么就不能登出了
+  var { username } = req.body;
+  // 如果这个authorization不为空
+  if (!_.isNil(req.headers['authorization'])) {
+    var token = req.headers['authorization'].split(" ")[1];
+    User.findOneAsync({ username: username }).then(doc => {
+      if (_.isEqual(token, doc.token)) {
+        // 如果相等，那么清除token
+        doc.token = "";
+        doc.saveAsync();
+      }
+      res.send({
+        message:"退出成功"
+      })
+      return;
+    }).catch(rejection => {
+      next(rejection);
+      return;
+    });
+  } else {
+    next(createError(500, '嘻嘻嘻，后续处理'));
+  }
 }
 
 module.exports = new Admin();

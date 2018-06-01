@@ -22,7 +22,7 @@ npm run dev
 - [ ] csrf跨站请求攻击如何避免？
 - [ ] cluster集群如何实现？
 - [ ] socket.io 区分聊天室，room的概念？
-- [ ] steam流的概念，优化缓存？
+- [ ] steam流的概念，优化缓存，二进制 Buffer
 - [ ] mocha测试模块开发
 - [ ] 利用百度和腾讯的地理信息api做定位处理
 - [ ] 错误异常处理 http-errors errorhandler

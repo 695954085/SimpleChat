@@ -26,6 +26,10 @@ router.put('/user', function (req, res, next) {
 router.delete('/user', function (req, res, next) {
 
 })
+//用户登录
+router.post('/login', urlencodedParser, admin.login);
+//用户登出
+router.post('/signout', urlencodedParser, admin.signOut);
 
 module.exports = router;
 

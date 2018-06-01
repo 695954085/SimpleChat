@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Promise = require('bluebird');
+Promise.promisifyAll(mongoose);
 const config = require('config');
 
 mongoose.connect(config.get('Customer.dbConfig.mongodb'));
