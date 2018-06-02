@@ -4,6 +4,9 @@ const createError = require('http-errors');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const _ = require('lodash');
+const path = require('path');
+const fs = require('fs')
+const formidable = require('formidable')
 
 function Admin() {
   // this.register = Admin.prototype.register.bind(this);
@@ -73,7 +76,8 @@ Admin.prototype.register = function (req, res, next) {
     }
     var user = new User({
       username: form.username,
-      password: form.password
+      password: form.password,
+      date: new Date()
     });
     user.save(function (err, doc) {
       if (err) {
@@ -104,7 +108,7 @@ Admin.prototype.signOut = function (req, res, next) {
         doc.saveAsync();
       }
       res.send({
-        message:"退出成功"
+        message: "退出成功"
       })
       return;
     }).catch(rejection => {
@@ -114,6 +118,44 @@ Admin.prototype.signOut = function (req, res, next) {
   } else {
     next(createError(500, '嘻嘻嘻，后续处理'));
   }
+}
+
+Admin.prototype.uploadAvatar = function (req, res, next) {
+  var form = new formidable.IncomingForm();
+  form.uploadDir = path.join(__dirname, '../public/avatar/tmp');
+  form.keepExtensions = true;
+  form.type = 'multipart';
+  form.parse(req, function (err, fields, files) {
+    if (err) {
+      next(err);
+      return;
+    }
+    var { username } = fields;
+    var extension = files['avatar'].name.split('.')[1] || 'jpg';
+    // fs.rename(files['avatar'].path, path.join(__dirname, '../public/',`${username}_avatar.${extension}`), function (err) {
+    //   if(err){
+    //     next(err);
+    //     return;
+    //   }
+    //   res.send({
+    //     message:'头像成功上传'
+    //   })
+    // })
+    var readStream = fs.createReadStream(files['avatar'].path);
+    readStream.on('close', function () {
+      fs.unlink(files['avatar'].path, function (err) {
+        if (err) {
+          next(err);
+          return;
+        }
+        res.send({
+          message: '头像成功上传'
+        })
+      })
+    })
+    var writeStream = fs.createWriteStream(path.join(__dirname, '../public/', `${username}_avatar.${extension}`));
+    readStream.pipe(writeStream);
+  });
 }
 
 module.exports = new Admin();

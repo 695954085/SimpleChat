@@ -30,6 +30,8 @@ router.delete('/user', function (req, res, next) {
 router.post('/login', urlencodedParser, admin.login);
 //用户登出
 router.post('/signout', urlencodedParser, admin.signOut);
+//上傳頭像
+router.post('/avatar', admin.uploadAvatar);
 
 module.exports = router;
 
