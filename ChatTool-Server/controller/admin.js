@@ -131,7 +131,7 @@ Admin.prototype.uploadAvatar = function (req, res, next) {
       return;
     }
     var { username } = fields;
-    var extension = files['avatar'].name.split('.')[1] || 'jpg';
+    var extension = files['avatar'].name.split('.')[files['avatar'].name.split('.').length - 1] || 'jpg';
     // fs.rename(files['avatar'].path, path.join(__dirname, '../public/',`${username}_avatar.${extension}`), function (err) {
     //   if(err){
     //     next(err);

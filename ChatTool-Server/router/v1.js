@@ -3,6 +3,7 @@ const User = require('../model/user');
 const formidable = require('formidable');
 const bodyParser = require('body-parser');
 const admin = require('../controller/admin');
+const passport = require('passport');
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var router = express.Router();
@@ -31,7 +32,7 @@ router.post('/login', urlencodedParser, admin.login);
 //用户登出
 router.post('/signout', urlencodedParser, admin.signOut);
 //上傳頭像
-router.post('/avatar', admin.uploadAvatar);
+router.post('/avatar', passport.authenticate('bearer', { session: false }), admin.uploadAvatar);
 
 module.exports = router;
 
