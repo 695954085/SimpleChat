@@ -6,6 +6,9 @@ const errorhandler = require('errorhandler');
 const passport = require('passport');
 const util = require("util");
 const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+const ioController = require('./controller/io');
 if (process.env.NODE_ENV == 'development') {
   app.use(errorhandler())
 }
@@ -27,7 +30,19 @@ app.use(function (err, req, res, next) {
     res.send(util.inspect(err));
   }
 });
-app.listen(3000, function () {
-  console.log('程序正在监听3000端口')
+// app.listen(3000, function () {
+//   console.log('程序正在监听3000端口')
+// });
+// 使用默认的namespace
+// io.on('connection', function (socket) {
+// console.log('a user connected');
+// socket.on('disconnect', function () {
+//   console.log('user disconnected');
+// });
+// });
+ioController(io);
+
+http.listen(3000, function () {
+  console.log('listening on *:3000');
 });
 
