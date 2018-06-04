@@ -14,10 +14,6 @@ export default {
   props:["sourceName","time","sendContent","direction"],
   data() {
     return {
-      // direction: "left",
-      // sourceName: "机器人",
-      // time: "20180531",
-      // sendContent: "哈哈哈",
       showPrise1: false,
       showPrise2: false,
     }
@@ -162,10 +158,5 @@ $send-button-color:#F57623;
     text-align: right;
   }
 }
-
-
-
-
-
 /* 消息窗口 end*/
 </style>

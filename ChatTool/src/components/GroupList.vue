@@ -7,7 +7,7 @@
 <script>
 export default {
   name: 'GroupList',
-  props: ["groupName","groupId"],
+  props: ["groupName","groupId","groupMumber"],
   data() {
     return {
       msg: ''
@@ -15,6 +15,9 @@ export default {
   },
   methods: {
     groupClick() {
+      this.$store.state.currentGroupName = this.groupName;
+      this.$store.state.currentGroupMumber = this.groupMumber;
+      alert(this.groupMumber);
       this.$router.push({ path: '/chat/'+this.groupId });
     }
   }

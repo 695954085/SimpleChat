@@ -1,7 +1,18 @@
 <template>
   <div class="chatpanel">
     <div class="chat-content-window">
-      <div class="chat-content-window-name"></div>
+      <div class="chat-window-header">
+        <div clas="chat-content-window-name">{{owner}}</div>
+        <el-popover placement="left" width="200" trigger="click">
+          <h3>群聊成员</h3>
+          <el-menu class="group-list">
+            <el-menu-item  :key="id in mumberItem"  v-for="mumberItem in groupMumbers">
+              <span>{{mumberItem.name}}</span>
+            </el-menu-item>
+          </el-menu>
+          <i class="el-icon-more" slot="reference"></i>
+        </el-popover>
+      </div>
       <div class="chat-window-body">
         <MessageItem :time=messageList.time :sourceName=messageList.sourceName :sendContent=messageList.sendContent :direction=messageList.direction :key="index in messageList" v-for="messageList in messageLists">
         </MessageItem>
@@ -30,14 +41,17 @@
         </div>
         <div class="chat-footer-send">
           <button class="chat-endContact" style="display:none;">结束会话</button>
-          <button class="chat-sendBtn">发送(S)</button>
+          <button class="chat-sendBtn" @click="sendMessage">发送(S)</button>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script>
+
 import MessageItem from '@/components/MessageItem'
+import store from '@/store/store'
+
 export default {
   name: 'ChatPanel',
   components: {
@@ -45,14 +59,32 @@ export default {
   },
   data() {
     return {
-      textarea: 'entertext',
+      textarea: '',
       messageLists:
       [
         { "time": "20180531", "sourceName": "xxx", "sendContent": "hahaha", "direction": "left" },
-        { "time": "20180601", "sourceName": "yyy", "sendContent": "hahaha", "direction": "right" }
-      ]
-
+        { "time": "20180601", "sourceName": "yyy", "sendContent": "hehehe", "direction": "right" }
+      ],
     }
+  },
+  methods: {
+    sendMessage() {
+      //用axios发消息给服务器回调插入聊天框？
+      alert("apple");
+      this.messageLists.push({ "time": "20180531", "sourceName": this.$store.state.userName, "sendContent": this.textarea, "direction": "right" });
+    }
+  },
+  computed: {
+    owner() {
+      return this.$store.state.currentGroupName
+    },
+    groupMumbers(){
+      return this.$store.state.currentGroupMumber
+    }
+  },
+  watch:{
+  },
+  mounted: {
   }
 }
 </script>
@@ -65,6 +97,11 @@ export default {
 }
 
 
+
+
+
+
+
 /*聊天窗口样式 begin*/
 
 $color-green: #1AAD19;
@@ -73,11 +110,15 @@ $send-button-color:#F57623;
 .chat-content-window {
   font-size: .8rem;
   letter-spacing: 0;
-  .chat-content-window-name {
-    padding: 12px 0;
-    font: 1rem bold;
-    text-indent: 1rem;
+  .chat-window-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
     border-bottom: 1px solid #d3d3d3;
+    .chat-content-window-name {
+      font: 1rem bold;
+      text-indent: 1rem;
+    }
   }
   .chat-window-footer {
     position: absolute;
@@ -167,7 +208,6 @@ $send-button-color:#F57623;
     }
   }
 }
-
 
 
 

@@ -53,20 +53,38 @@ export default {
       dialogVisible1: false,
       dialogVisible2: false,
       loginForm: {
-          account: 'admin',
-          checkPass: '123456'
-        },
+        account: 'admin',
+        checkPass: '123456'
+      },
     }
   },
   methods: {
     signIn() {
       alert("signIn");
+      var params = new URLSearchParams();
+      params.append('username', this.loginForm.account);
+      params.append('password', this.loginForm.checkPass);
+      this.$http({
+        url: `127.0.0.1/login`,
+        method: 'post',
+        data: params,
+      }).then((res) => {
+        if (res.data.success === true) {
+          this.token = res.data.data;
+          this.$router.push({ path: '/chat' });
+          //还需要一个把Token存cookie的动作。。
+        } else {
+          this
+        }
+      }).catch((res) => {
+        console.log('ArticleCom.vue: ', res);
+      });
       this.$router.push({ path: '/chat' });
     },
     signUp() {
       alert("signUp")
     }
-  }
+  },
 }
 </script>
 
