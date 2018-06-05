@@ -1,15 +1,10 @@
 const Client = require('./client');
-
+const socketDb = require('../model/socketdb')
 function IoContoller(io) {
-  var clients = new Array();
-  // 使用默认的namespace
+  // 使用默认的namespace, 默认进入大厅
   io.on('connection', function (socket) {
     console.log('a user connected');
-    // socket.on('disconnect', function () {
-    //   console.log('user disconnected');
-    // });
-    var client = new Client(socket);
-    clients.push(client);
+    var client = new Client(socket, socketDb);
   });
 }
 
