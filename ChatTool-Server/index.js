@@ -9,6 +9,8 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const ioController = require('./controller/io');
+const compression = require('compression');
+
 if (process.env.NODE_ENV == 'development') {
   app.use(errorhandler())
 }
@@ -21,6 +23,7 @@ app.use(morgan(function (tokens, req, res) {
     tokens['response-time'](req, res), 'ms'
   ].join(' ')
 }))
+app.use(compression());
 app.use(express.static('public'));
 require('./passport')(passport);
 router(app);

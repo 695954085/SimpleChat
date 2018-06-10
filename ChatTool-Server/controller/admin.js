@@ -55,6 +55,9 @@ Admin.prototype.login = function (req, res, next) {
             token: token
           }
           res.send(content);
+          // res.write(util.inspect(content)); 
+          // res.flush();
+          // res.end();
         })
       })
     })
