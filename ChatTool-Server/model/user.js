@@ -6,7 +6,8 @@ var userSchema = mongoose.Schema({
   password: String,
   avatar: String,
   date: Date,
-  token: String
+  token: String,
+  email: String
 })
 
 // 密码验证

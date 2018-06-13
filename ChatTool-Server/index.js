@@ -25,6 +25,11 @@ app.use(morgan(function (tokens, req, res) {
 }))
 app.use(compression());
 app.use(express.static('public'));
+app.use(function (req, res, next) {
+  // res.writeHead('Access-Control-Allow-Origin', "*");
+  res.setHeader('Access-Control-Allow-Origin','*')
+  next();
+})
 require('./passport')(passport);
 router(app);
 // error handler
