@@ -7,7 +7,8 @@ import router from './router';
 
 import Vuex from 'vuex'
 import store from './store/store'
-import axios from 'axios'
+//import axios from 'axios'
+import axios from './axios/http'
 
 
 import ElementUI from 'element-ui';
