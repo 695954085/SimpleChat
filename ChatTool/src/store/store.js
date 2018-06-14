@@ -10,6 +10,7 @@ const store = new Vuex.Store({
     userName: 'MrWrong',
     currentGroupName: 'groupName',
     currentGroupMumber:[{id:"defult",name:"default"}],
+    token:'',
   }
 })
 

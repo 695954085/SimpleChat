@@ -22,19 +22,19 @@
         </el-form-item>
       </el-form>
     </el-dialog>
-    <el-dialog :model="register-form" title="用户注册" :visible.sync="dialogVisible2">
-      <el-form class="demo-ruleForm register-container">
+    <el-dialog title="用户注册" :visible.sync="dialogVisible2">
+      <el-form :model="registerForm" class="demo-ruleForm register-container">
         <el-form-item prop="account">
           <label class="input-label">Username</label>
-          <el-input type="text" auto-complete="off" placeholder="Pick a username"></el-input>
+          <el-input type="text"  v-model="registerForm.account" auto-complete="off" placeholder="Pick a username"></el-input>
         </el-form-item>
-        <el-form-item prop="account">
+        <el-form-item prop="email">
           <label class="input-label">Email</label>
-          <el-input type="text" auto-complete="off" placeholder="you@example.com"></el-input>
+          <el-input type="text"  v-model="registerForm.email" auto-complete="off" placeholder="you@example.com"></el-input>
         </el-form-item>
         <el-form-item prop="checkPass">
           <label class="input-label">password</label>
-          <el-input type="password" auto-complete="off" placeholder="Create a password"></el-input>
+          <el-input type="password"  v-model="registerForm.checkPass" auto-complete="off" placeholder="Create a password"></el-input>
         </el-form-item>
         <el-form-item style="width:100%;">
           <el-button type="primary" style="width:100%;" @click="signUp">Sign up for simplechat</el-button>
@@ -56,34 +56,59 @@ export default {
         account: 'admin',
         checkPass: '123456'
       },
+      registerForm: {
+        account: 'xxx',
+        checkPass: 'xxx',
+        email: 'xxx@xx.com'
+      }
     }
   },
   methods: {
+    //登录
     signIn() {
       alert("signIn");
       var params = new URLSearchParams();
       params.append('username', this.loginForm.account);
       params.append('password', this.loginForm.checkPass);
       this.$http({
-        url: `127.0.0.1/login`,
+        url: `http://127.0.0.1:3000/v1/login`,
         method: 'post',
         data: params,
       }).then((res) => {
-        if (res.data.success === true) {
-          this.token = res.data.data;
+        if (res.status === 200) {
+          console.log(res);
+          this.$store.state.userid = res.data.id;
+          this.$store.state.token = res.data.token;
           this.$router.push({ path: '/chat' });
-          //还需要一个把Token存cookie的动作。。
-        } else {
-          this
         }
       }).catch((res) => {
-        console.log('ArticleCom.vue: ', res);
+        console.log('Main.vue: ', res);
       });
-      this.$router.push({ path: '/chat' });
     },
+    //注册
     signUp() {
-      alert("signUp")
-    }
+      var params = new URLSearchParams();
+      params.append('username', this.registerForm.account);
+      //params.append('email', this.registerForm.email);
+      params.append('password', this.registerForm.checkPass);
+      console.log(params);
+      this.$http({
+        url: `http://127.0.0.1:3000/v1/user`,
+        method: 'post',
+        data: params,
+      }).then((res) => {
+        console.log(res);
+        if (res.status === 200) {
+          //返回一个用户id标记一个唯一的用户(res.data.id)
+          this.$store.state.userid = res.data.id;
+          alert("注册成功");
+          this.dialogVisible1=true;
+          this.dialogVisible2=false;
+        }
+      }).catch((res) => {
+        console.log('注册错误: ', res);
+      });
+    },
   },
 }
 </script>
