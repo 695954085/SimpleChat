@@ -53,13 +53,13 @@ export default {
       dialogVisible1: false,
       dialogVisible2: false,
       loginForm: {
-        account: 'admin',
-        checkPass: '123456'
+        account: '',
+        checkPass: ''
       },
       registerForm: {
-        account: 'xxx',
-        checkPass: 'xxx',
-        email: 'xxx@xx.com'
+        account: '',
+        checkPass: '',
+        email: ''
       }
     }
   },
@@ -89,7 +89,7 @@ export default {
     signUp() {
       var params = new URLSearchParams();
       params.append('username', this.registerForm.account);
-      //params.append('email', this.registerForm.email);
+      params.append('email', this.registerForm.email);
       params.append('password', this.registerForm.checkPass);
       console.log(params);
       this.$http({

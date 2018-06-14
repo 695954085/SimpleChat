@@ -1,11 +1,26 @@
 <template>
   <el-container class="container">
     <el-header class="header grid-content">
-      <div class="header-introduction">
-        <img class="simple-logo" src="../assets/logo.png" alt="" style="display:none;">
-        <div class="header-title">SimpleChat</div>
-      </div>
-      <el-button type="primary" @click="selectFriend = true">选择用户</el-button>
+      <el-row>
+        <el-col :span="4">
+          <div class="header-introduction">
+            <div class="header-title">SimpleChat</div>
+          </div>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="primary" @click="selectFriend = true">选择用户</el-button>
+        </el-col>
+        <el-col :offset="12" :span="4" class="userinfo">
+          <el-dropdown trigger="hover">
+            <span class="el-dropdown-link userinfo-inner"><img src="../assets/user.png" /> {{sysUserName}}</span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item>我的消息</el-dropdown-item>
+              <el-dropdown-item>设置</el-dropdown-item>
+              <el-dropdown-item divided @click.native="logout">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </el-col>
+      </el-row>
     </el-header>
     <el-container class="main-container">
       <el-aside width="200px" class="left-side">
@@ -42,6 +57,7 @@ export default {
   data() {
     return {
       msg: '',
+      sysUserName: '夏某某',
       selectFriend: false,
       checkList: [],
       groupLists: [],
@@ -71,6 +87,27 @@ export default {
         this.selectFriend = false;
       }
     }
+  },
+  mounted() {
+    var params = new URLSearchParams();
+    params.append('userId', this.$store.state.userid);
+    //axios请求该用户的群聊情况
+    this.$http({
+      url: `http://127.0.0.1:3000/v1/group`,
+      method: 'post',
+      data: params,
+    }).then((res) => {
+      console.log(res);
+      if (res.status === 200) {
+        //解析返回的数据触发groupList的值变化
+      }
+    }).catch((res) => {
+      console.log('请求组信息: ', res);
+    });
+    for (let i = 0; i < 10; i++) {
+      let groupId = Math.random().toString(36).substr(2);
+      this.groupLists.push({ id: groupId, name: groupId, mumber: [{ id: "xxx", name: "xxx" }, { id: "yyy", name: "yyy" }] })
+    }
   }
 }
 </script>
@@ -82,18 +119,29 @@ export default {
     height: 60px;
     overflow: hidden;
     background: rgb(238, 246, 246);
-    display: flex;
-    align-items: center;
-    padding:0 10px;
-    justify-content: space-between;
     .header-introduction {
       .simple-logo {
         height: 60px;
       }
-      .header-title{
+      .header-title {
         font-weight: 700;
         font-size: 1.6rem;
-        color:#18c79c;
+        color: #18c79c;
+      }
+    }
+    .userinfo {
+      text-align: right;
+      padding-right: 35px;
+      float: right;
+      .userinfo-inner {
+        cursor: pointer; //color: #fff;
+        img {
+          width: 40px;
+          height: 40px;
+          border-radius: 20px;
+          margin: 10px 0px 10px 10px;
+          float: right;
+        }
       }
     }
   }
