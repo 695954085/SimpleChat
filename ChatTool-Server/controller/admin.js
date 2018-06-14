@@ -31,7 +31,7 @@ Admin.prototype.login = function (req, res, next) {
       }
       if (!isMatch) {
         // 密码不正确
-        next(createError(500, "密码不正确"));
+        next(createError(400, "密码不正确"));
         return;
       }
       // 生成token
@@ -74,7 +74,7 @@ Admin.prototype.register = function (req, res, next) {
     }
     if (user) {
       // 该用户已存在
-      next(createError(500, "该用户已存在"));
+      next(createError(400, "该用户已存在"));
       return;
     }
     var user = new User({

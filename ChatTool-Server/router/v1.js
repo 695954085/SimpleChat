@@ -8,11 +8,11 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var router = express.Router();
 
 //获取用户列表数据
-router.get('/user', function (req, res, next) {
+router.get('/user',passport.authenticate('bearer', { session: false }), function (req, res, next) {
 
 });
 //获取某一个用户数据
-router.get('/user/:id', passport.authenticate('bearer', { session: false }),function (req, res, next) {
+router.get('/user/:id', passport.authenticate('bearer', { session: false }), function (req, res, next) {
 
 });
 //注册某一个用户
@@ -28,9 +28,11 @@ router.delete('/user', passport.authenticate('bearer', { session: false }), func
 //用户登录
 router.post('/login', urlencodedParser, admin.login);
 //用户登出
-router.post('/signout', urlencodedParser, admin.signOut);
+router.post('/signout', passport.authenticate('bearer', { session: false }), urlencodedParser, admin.signOut);
 //上傳頭像
 router.post('/avatar', passport.authenticate('bearer', { session: false }), admin.uploadAvatar);
+//用户添加群
+router.post('/group', passport.authenticate('bearer', { session: false }), )
 
 module.exports = router;
 
