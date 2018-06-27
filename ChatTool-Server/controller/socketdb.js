@@ -11,17 +11,18 @@ SocketDB.prototype.addClient = function () {
   this.totalClient++;
 }
 
-SocketDB.prototype.addHall = function () {
+SocketDB.prototype.addHall = function (cb) {
   this.hallClient++;
+  cb.apply(this)
 }
 
 SocketDB.prototype.leaveHall = function () {
   this.hallClient--;
 }
 
-SocketDB.prototype.joinRoom = function (roomId, socket) {
+SocketDB.prototype.joinRoom = function (roomId, socket, cb) {
   let arr;
-  if (_.isNull(this.roomMateNumber[roomId])) {
+  if (_.isNil(this.roomMateNumber[roomId])) {
     arr = new Array();
     arr.push(socket);
     this.roomMateNumber[roomId] = arr;
@@ -29,6 +30,7 @@ SocketDB.prototype.joinRoom = function (roomId, socket) {
     arr = this.roomMateNumber[roomId];
     arr.push(socket);
   }
+  cb.call(this,arr)
 }
 
 SocketDB.prototype.leaveRoom = function (roomId, socket) {

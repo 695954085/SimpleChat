@@ -26,7 +26,6 @@ app.use(morgan(function (tokens, req, res) {
 app.use(compression());
 app.use(express.static('public'));
 app.use(function (req, res, next) {
-  // res.writeHead('Access-Control-Allow-Origin', "*");
   res.setHeader('Access-Control-Allow-Origin','*')
   next();
 })
@@ -51,7 +50,7 @@ app.use(function (err, req, res, next) {
 // });
 ioController(io);
 
-http.listen(3000, function () {
+http.listen(3001, function () {
   console.log('listening on *:3000');
 });
 

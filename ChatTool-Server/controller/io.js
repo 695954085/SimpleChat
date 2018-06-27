@@ -4,7 +4,7 @@ function IoContoller(io) {
   // 使用默认的namespace, 默认进入大厅
   io.on('connection', function (socket) {
     console.log('a user connected');
-    var client = new Client(socket, socketDb);
+    var client = new Client(socket, socketDb, io);
   });
 }
 

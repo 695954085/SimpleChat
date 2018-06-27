@@ -29,6 +29,14 @@ var socket = io.connect();
 $(document).ready(function() {
   var chatApp = new Chat(socket);
 
+  socket.on('announcement__hall',function(result){
+    console.log(result)
+  })
+
+  socket.emit('createRoom','001');
+  socket.on('announcement__room',function(result){
+    console.log(result)
+  })
   socket.on('nameResult', function(result) {
     var message;
 

@@ -3,24 +3,27 @@ const _ = require('lodash');
 
 class Client extends EventEmitter {
 
-  constructor(socket, socketDb) {
+  constructor(socket, socketDb, io) {
     super();
     this.socket = socket;
     this.socketDb = socketDb;
     this.roomId = '';
+    this.io = io;
     this.init();
   }
 
   init() {
     this.socketDb.addClient();
-    this.socketDb.addHall();
+    let that = this;
+    // 默认加入大厅
+    this.socketDb.addHall(function () {
+      // 添加成功后，通知大厅里面的其他成员，有新成员加入了
+      that.io.emit('announcement__hall',`欢迎新成员${that.socket.id}加入大厅`)
+    });
+    // 自定义创建房间
     this.socket.on('createRoom', data => {
       this.createRoom(data);
     });
-    this.socket.on('message', data => {
-      console.log(data);
-      // this.sendMessage(data);
-    })
   }
 
   createRoom(newRoomId) {
@@ -29,13 +32,12 @@ class Client extends EventEmitter {
         console.log(`socket无法加入${newRoomId}`);
         return;
       }
-      this.socketDb.joinRoom(newRoomId, this.socket);
-      if (!_.isEmpty(this.roomId)) {
-        this.socket.leave(this.roomId);
-        console.log(`socket已经离开${this.roomId}`)
-        this.socketDb.leaveRoom(this.roomId, this.socket);
-      }
-      this.roomId = newRoomId;
+      let that = this;
+      this.socketDb.joinRoom(newRoomId, this.socket, function(arr) {
+        // 可以利用arr，告知在线人数等信息
+        that.io.to(newRoomId).emit('announcement__room',`欢迎新成员${that.socket.id}加入房间${newRoomId}`)
+        that.io.to(newRoomId).emit('announcement__room',`当前房间人数:${arr.length}`)
+      });
     })
   }
 

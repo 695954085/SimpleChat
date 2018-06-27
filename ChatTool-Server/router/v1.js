@@ -8,7 +8,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var router = express.Router();
 
 //获取用户列表数据
-router.get('/user',passport.authenticate('bearer', { session: false }), function (req, res, next) {
+router.get('/user', passport.authenticate('bearer', { session: false }), function (req, res, next) {
 
 });
 //获取某一个用户数据
