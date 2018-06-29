@@ -6,5 +6,5 @@ const config = require('config')
 mongoose.connect(config.get('Customer.dbConfig.mongodb'))
 var db = mongoose.connection
 db.on('error', console.error.bind(console, '数据库连接失败'))
-db.once('open', console.log.bind(console, '数据库连接成功'))
+if(!module.parent.parent) db.once('open', console.log.bind(console, '数据库连接成功'))
 module.exports = db
