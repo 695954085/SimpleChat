@@ -5,7 +5,7 @@ const morgan = require('morgan');
 const errorhandler = require('errorhandler');
 const passport = require('passport');
 const util = require("util");
-const app = express();
+const app = module.exports = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const ioController = require('./controller/io');
@@ -50,7 +50,9 @@ app.use(function (err, req, res, next) {
 // });
 ioController(io);
 
-http.listen(3001, function () {
-  console.log('listening on *:3000');
-});
+if(!module.parent) {
+  app.listen(3000, () => {
+    console.log('listening on *:3000');
+  })
+}
 

@@ -3,12 +3,14 @@ const _ = require('lodash');
 
 class Client extends EventEmitter {
 
-  constructor(socket, socketDb, io) {
-    super();
-    this.socket = socket;
-    this.socketDb = socketDb;
-    this.roomId = '';
-    this.io = io;
+  constructor(socket, socketDb, io, user) {
+    super()
+    this.socket = socket
+    this.socketDb = socketDb
+    this.roomId = ''
+    this.io = io
+    this.user = user
+    console.log(user)
     this.init();
   }
 
@@ -24,6 +26,8 @@ class Client extends EventEmitter {
     this.socket.on('createRoom', data => {
       this.createRoom(data);
     });
+    // 接收信息
+    this.socket.on('message', this.sendMessage)
   }
 
   createRoom(newRoomId) {

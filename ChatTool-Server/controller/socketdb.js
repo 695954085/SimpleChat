@@ -30,7 +30,7 @@ SocketDB.prototype.joinRoom = function (roomId, socket, cb) {
     arr = this.roomMateNumber[roomId];
     arr.push(socket);
   }
-  cb.call(this,arr)
+  cb.call(this, arr)
 }
 
 SocketDB.prototype.leaveRoom = function (roomId, socket) {
