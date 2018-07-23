@@ -1,6 +1,6 @@
 # SimpleChat
 
-基于微信风格的聊天室
+基于socket.io的聊天室
 
 ## 前言
 

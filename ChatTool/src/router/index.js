@@ -11,6 +11,12 @@ import MessageItem from '@/components/MessageItem'
 
 Vue.use(Router)
 
+// 页面刷新时，重新赋值token
+// if (sessionStorage.getItem('token')) {
+//   this.$store.commit('set_token', sessionStorage.getItem('token'))
+// }
+
+
 const router = new Router({
   routes: [{
       path: '/',
@@ -18,7 +24,12 @@ const router = new Router({
     },
     {
       path: '/login',
-      component: Main
+      component: Main,
+      data: function () {
+        return {
+          isLogin:true,
+        }
+      }
     },
     {
       path: '/chatpanel',
@@ -46,8 +57,7 @@ const router = new Router({
       component: MessageItem,
       name: '',
       hidden: true,
-    }
-
+    },
   ]
 });
 // router.beforeEach((to, from, next) => {

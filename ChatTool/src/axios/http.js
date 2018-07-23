@@ -3,7 +3,7 @@ import axios from 'axios';
 // 超时时间
 axios.defaults.timeout = 5000
 
-// http request 请求拦截器，有token值则配置上token值
+//http request 请求拦截器，有token值则配置上token值
 axios.interceptors.request.use(
   config => {
     if (this.store.$state.token) { // 每次发送请求之前判断是否存在token，如果存在，则统一在http请求的header都加上token，不用每次请求都手动添加了
@@ -14,7 +14,7 @@ axios.interceptors.request.use(
   err => {
     return Promise.reject(err);
   });
-// http response 服务器响应拦截器，这里拦截401错误，并重新跳入登页重新获取token
+//http response 服务器响应拦截器，这里拦截401错误，并重新跳入登页重新获取token
 axios.interceptors.response.use(
   response => {
     return response;

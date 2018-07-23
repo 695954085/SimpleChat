@@ -10,11 +10,13 @@
         <el-col :span="4">
           <el-button type="primary" @click="selectFriend = true">选择用户</el-button>
         </el-col>
-        <el-col :offset="12" :span="4" class="userinfo">
+        <el-col :offset="12" :span="2">
+          <span>{{sysUserName}}</span>
+        </el-col>
+        <el-col :span="2" class="userinfo">
           <el-dropdown trigger="hover">
-            <span class="el-dropdown-link userinfo-inner"><img src="../assets/user.png" /> {{sysUserName}}</span>
+            <img class="el-dropdown-link userinfo-inner" src="../assets/user.png" />
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>我的消息</el-dropdown-item>
               <el-dropdown-item>设置</el-dropdown-item>
               <el-dropdown-item divided @click.native="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
@@ -25,7 +27,7 @@
     <el-container class="main-container">
       <el-aside width="200px" class="left-side">
         <el-menu class="group-list">
-          <GroupList :groupMumber=groupItem.mumber :groupId=groupItem.id :groupName=groupItem.name :key="groupItem.id" v-for="groupItem in groupLists"></GroupList>
+          <GroupList v-for="(groupItem,index) in groupLists" :key="groupItem.id" :groupIndex="index" :groupMumber="groupItem.mumber" :groupId="groupItem.id" :groupName="groupItem.name"></GroupList>
         </el-menu>
       </el-aside>
       <el-main class="grid-content right-side">
@@ -38,7 +40,7 @@
     </el-container>
     <el-dialog title="选择好友" :visible.sync="selectFriend" width="30%">
       <el-checkbox-group v-model="checkList" class="user-list">
-        <UserList :userId=userItem.id :userName=userItem.name :key="userItem.id" v-for="userItem in userLists"></UserList>
+        <UserList :userId="userItem.id" :userName="userItem.name" :key="userItem.id" v-for="userItem in userLists"></UserList>
       </el-checkbox-group>
       <el-input v-model="groupNameInput" placeholder="起个威风的群名"></el-input>
       <el-button type="primary" @click="createGroup">创建群聊</el-button>
@@ -46,8 +48,10 @@
   </el-container>
 </template>
 <script>
+
 import GroupList from '@/components/GroupList'
 import UserList from '@/components/UserList'
+
 export default {
   name: 'Container',
   components: {
@@ -57,7 +61,7 @@ export default {
   data() {
     return {
       msg: '',
-      sysUserName: '夏某某',
+      sysUserName: '',
       selectFriend: false,
       checkList: [],
       groupLists: [],
@@ -66,6 +70,7 @@ export default {
         { id: "yyy", name: "yyy" },
         { id: "zzz", name: "zzz" },
       ],
+      groupNameInput: 'default'
     }
   },
   methods: {
@@ -74,6 +79,8 @@ export default {
         console.log(this.groupNameInput + this.checkList);
         //随机生成一个串，，然后查库比对是否不存在，作为唯一的串赖标记一个群聊的id
         let groupId = Math.random().toString(36).substr(2);
+        //创建房间
+        this.$socket.emit('createRoom', groupId);
         //从checkList映射回所有的好友数据
         let selectMumber = [];
         for (let i = 0; i < this.checkList.length; i++) {
@@ -86,28 +93,40 @@ export default {
         this.groupLists.push({ id: groupId, name: this.groupNameInput, mumber: selectMumber });
         this.selectFriend = false;
       }
+    },
+    queryMumber(groupId){
+      if(groupId === "all_public_connect"){
+        return  [{ id: "xxx", name: "xxx" }, { id: "yyy", name: "yyy" }];
+      }
+      return null;
     }
   },
   mounted() {
+    this.sysUserName = this.$store.state.userName;
     var params = new URLSearchParams();
     params.append('userId', this.$store.state.userid);
     //axios请求该用户的群聊情况
-    this.$http({
-      url: `http://127.0.0.1:3000/v1/group`,
-      method: 'post',
-      data: params,
-    }).then((res) => {
-      console.log(res);
-      if (res.status === 200) {
-        //解析返回的数据触发groupList的值变化
-      }
-    }).catch((res) => {
-      console.log('请求组信息: ', res);
+    // this.$http({
+    //   url: `http://127.0.0.1:3000/v1/group`,
+    //   method: 'post',
+    //   data: params,
+    // }).then((res) => {
+    //   console.log(res);
+    //   if (res.status === 200) {
+    //     //解析返回的数据触发groupList的值变化
+    //   }
+    // }).catch((res) => {
+    //   console.log('请求组信息: ', res);
+    // });
+    // for (let i = 0; i < 10; i++) {
+    //   let groupId = Math.random().toString(36).substr(2);
+    //   this.groupLists.push({ id: groupId, name: groupId, mumber: [{ id: "xxx", name: "xxx" }, { id: "yyy", name: "yyy" }] })
+    // }
+    this.groupLists.push({
+      id: "all_public_connect",
+      name: "所有用户",
+      mumber: this.queryMumber("all_public_connect")
     });
-    for (let i = 0; i < 10; i++) {
-      let groupId = Math.random().toString(36).substr(2);
-      this.groupLists.push({ id: groupId, name: groupId, mumber: [{ id: "xxx", name: "xxx" }, { id: "yyy", name: "yyy" }] })
-    }
   }
 }
 </script>
@@ -130,18 +149,10 @@ export default {
       }
     }
     .userinfo {
-      text-align: right;
-      padding-right: 35px;
-      float: right;
       .userinfo-inner {
-        cursor: pointer; //color: #fff;
-        img {
-          width: 40px;
-          height: 40px;
-          border-radius: 20px;
-          margin: 10px 0px 10px 10px;
-          float: right;
-        }
+        cursor: pointer;
+        width: 60px;
+        border-radius: 50%;
       }
     }
   }

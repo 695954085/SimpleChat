@@ -26,15 +26,15 @@
       <el-form :model="registerForm" class="demo-ruleForm register-container">
         <el-form-item prop="account">
           <label class="input-label">Username</label>
-          <el-input type="text"  v-model="registerForm.account" auto-complete="off" placeholder="Pick a username"></el-input>
+          <el-input type="text" v-model="registerForm.account" auto-complete="off" placeholder="Pick a username"></el-input>
         </el-form-item>
         <el-form-item prop="email">
           <label class="input-label">Email</label>
-          <el-input type="text"  v-model="registerForm.email" auto-complete="off" placeholder="you@example.com"></el-input>
+          <el-input type="text" v-model="registerForm.email" auto-complete="off" placeholder="you@example.com"></el-input>
         </el-form-item>
         <el-form-item prop="checkPass">
           <label class="input-label">password</label>
-          <el-input type="password"  v-model="registerForm.checkPass" auto-complete="off" placeholder="Create a password"></el-input>
+          <el-input type="password" v-model="registerForm.checkPass" auto-complete="off" placeholder="Create a password"></el-input>
         </el-form-item>
         <el-form-item style="width:100%;">
           <el-button type="primary" style="width:100%;" @click="signUp">Sign up for simplechat</el-button>
@@ -66,7 +66,7 @@ export default {
   methods: {
     //登录
     signIn() {
-      alert("signIn");
+      //alert("signIn");
       var params = new URLSearchParams();
       params.append('username', this.loginForm.account);
       params.append('password', this.loginForm.checkPass);
@@ -77,12 +77,25 @@ export default {
       }).then((res) => {
         if (res.status === 200) {
           console.log(res);
+          this.$store.state.userName = this.loginForm.account;
           this.$store.state.userid = res.data.id;
-          this.$store.state.token = res.data.token;
-          this.$router.push({ path: '/chat' });
+          //this.$store.state.token = res.data.token;
+          this.$store.commit('set_token', res.data.token);
+
+          if (this.$store.state.token) {
+            this.$router.push({ path: '/chat' });
+            console.log(this.$store.state.token);
+          } else {
+            this.dialogVisible2 = true;
+            this.dialogVisible1 = false;
+          }
+        }
+        if (res.status === 400) {
+          console.log(res);
         }
       }).catch((res) => {
-        console.log('Main.vue: ', res);
+        console.log('登录错误: ', res);
+        alert("登录错误，，请重新检查账号和密码！！");
       });
     },
     //注册
@@ -95,21 +108,28 @@ export default {
       this.$http({
         url: `http://127.0.0.1:3000/v1/user`,
         method: 'post',
-        data: params,
+        data: params
       }).then((res) => {
         console.log(res);
         if (res.status === 200) {
           //返回一个用户id标记一个唯一的用户(res.data.id)
           this.$store.state.userid = res.data.id;
           alert("注册成功");
-          this.dialogVisible1=true;
-          this.dialogVisible2=false;
+          this.dialogVisible1 = true;
+          this.dialogVisible2 = false;
         }
       }).catch((res) => {
         console.log('注册错误: ', res);
       });
     },
   },
+  ready: function() {
+    console.log('isLogin: ' + this.$route.params.isLogin);
+    if (this.$route.params.isLogin) {
+      this.dialogVisible2 = true;
+      this.dialogVisible1 = false;
+    }
+  }
 }
 </script>
 

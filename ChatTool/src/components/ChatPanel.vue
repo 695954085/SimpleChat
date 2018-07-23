@@ -6,7 +6,7 @@
         <el-popover placement="left" width="200" trigger="click">
           <h3>群聊成员</h3>
           <el-menu class="group-list">
-            <el-menu-item  :key="id in mumberItem"  v-for="mumberItem in groupMumbers">
+            <el-menu-item :key="mumberItem.id" :index="'mumberItem_'+index" v-for="(mumberItem,index) in groupMumbers">
               <span>{{mumberItem.name}}</span>
             </el-menu-item>
           </el-menu>
@@ -14,7 +14,7 @@
         </el-popover>
       </div>
       <div class="chat-window-body">
-        <MessageItem :time=messageList.time :sourceName=messageList.sourceName :sendContent=messageList.sendContent :direction=messageList.direction :key="index in messageList" v-for="messageList in messageLists">
+        <MessageItem :time="messageList.time" :sourceName="messageList.sourceName" :sendContent="messageList.sendContent" :direction="messageList.direction" :key="messageList.id" :index="'messageList_'+index" v-for="(messageList,index) in messageLists">
         </MessageItem>
       </div>
       <div class="chat-window-footer">
@@ -26,14 +26,6 @@
           <a class="chatTool-fileChat" title="发送文件">
             <i></i>
             <span>文件</span>
-          </a>
-          <a class="chatTool-videoChat" title="视频聊天">
-            <i></i>
-            <span>视频通信</span>
-          </a>
-          <a class="chatTool-locationChat" title="地理位置">
-            <i></i>
-            <span>位置</span>
           </a>
         </div>
         <div class="chat-footer-editor">
@@ -48,45 +40,95 @@
   </div>
 </template>
 <script>
+import store from "@/store/store";
 
-import MessageItem from '@/components/MessageItem'
-import store from '@/store/store'
+import MessageItem from "@/components/MessageItem";
 
 export default {
-  name: 'ChatPanel',
+  name: "ChatPanel",
   components: {
     MessageItem: MessageItem
   },
   data() {
     return {
-      textarea: '',
-      messageLists:
-      [
-        { "time": "20180531", "sourceName": "xxx", "sendContent": "hahaha", "direction": "left" },
-        { "time": "20180601", "sourceName": "yyy", "sendContent": "hehehe", "direction": "right" }
-      ],
+      textarea: "",
+      messageLists:[],
+      // messageLists:
+      // [
+      //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "sendContent": "testmessage1", "direction": "left" },
+      //   { "id": "message2", "time": "20180601", "sourceName": "yyy", "sendContent": "testmessage2", "direction": "right" }
+      // ],
+    };
+  },
+  sockets: {
+    connect: function() {
+      console.log("socket connected");
+    },
+    announcement__room: function(val) {
+      console.log(val);
+    },
+    announcement__hall: function(val) {
+      console.log(val);
+    },
+    message: function(val) {
+      if(val.sourceName === this.$store.state.userName){
+        val.direction = "right";
+      }else{
+        val.direction = "left";
+      }
+      this.messageLists.push(val);
     }
   },
   methods: {
     sendMessage() {
-      //用axios发消息给服务器回调插入聊天框？
-      alert("apple");
-      this.messageLists.push({ "time": "20180531", "sourceName": this.$store.state.userName, "sendContent": this.textarea, "direction": "right" });
+      // this.messageLists.push({ "time": "20180531", "sourceName": this.$store.state.userName, "sendContent": this.textarea, "direction": "right" });
+
+      // $socket is socket.io-client instance
+      if (this.textarea != "") {
+        let chatmessage = {
+          time:this.getNowFormatDate(),
+          sendContent:this.textarea,
+          sourceName: this.$store.state.userName
+        }
+        if (this.$store.state.currentGroupName === "所有用户") {
+          //这个群组是通知所有的用户
+          this.$socket.emit("message", chatmessage);
+        } else {
+          this.$socket.emit("createRoom", chatmessage);
+        }
+      }
+    },
+    getNowFormatDate() {
+      let date = new Date();
+      let seperator1 = "-";
+      let seperator2 = ":";
+      let month = date.getMonth() + 1;
+      let strDate = date.getDate();
+      if (month >= 1 && month <= 9) {
+          month = "0" + month;
+      }
+      if (strDate >= 0 && strDate <= 9) {
+          strDate = "0" + strDate;
+      }
+      let currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+              + " " + date.getHours() + seperator2 + date.getMinutes()
+              + seperator2 + date.getSeconds();
+      return currentdate;
     }
   },
   computed: {
     owner() {
-      return this.$store.state.currentGroupName
+      return this.$store.state.currentGroupName;
     },
-    groupMumbers(){
-      return this.$store.state.currentGroupMumber
+    groupMumbers() {
+      return this.$store.state.currentGroupMumber;
     }
   },
-  watch:{
+  mounted() {
+    this.$socket.emit("connect", "是从这开始连接吗?"); //在这里触发connect事件
   },
-  mounted: {
-  }
-}
+  watch: {}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -96,19 +138,13 @@ export default {
   position: relative;
 }
 
-
-
-
-
-
-
 /*聊天窗口样式 begin*/
 
-$color-green: #1AAD19;
+$color-green: #1aad19;
 $font-color: #333;
-$send-button-color:#F57623;
+$send-button-color: #f57623;
 .chat-content-window {
-  font-size: .8rem;
+  font-size: 0.8rem;
   letter-spacing: 0;
   .chat-window-header {
     display: flex;
@@ -189,7 +225,7 @@ $send-button-color:#F57623;
       color: #fff;
       border: none;
       &:hover {
-        opacity: .8;
+        opacity: 0.8;
       }
     }
     .chat-footer-send {
@@ -208,11 +244,6 @@ $send-button-color:#F57623;
     }
   }
 }
-
-
-
-
-
 
 /*聊天窗口样式 end*/
 </style>
