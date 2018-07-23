@@ -10,7 +10,6 @@ class Client extends EventEmitter {
     this.roomId = ''
     this.io = io
     this.user = user
-    console.log(user)
     this.init();
   }
 

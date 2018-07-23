@@ -1,5 +1,5 @@
 const path = require('path')
-const app = require('../index')
+const app = require('../app')
 const assert = require('assert')
 const server = app.listen()
 const request = require('supertest').agent(server)
@@ -33,7 +33,7 @@ describe('Admin', function () {
   })
 
   describe('#POST /v1/login', function () {
-    it('respond with json', function (done) {
+    it('登录', function (done) {
       request.post('/v1/login').set({
         'ContentType': 'Application/x-www-form-urlencoded'
       }).send('username=xia11&password=123123').expect(200).end(function (err, res) {

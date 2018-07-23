@@ -1,4 +1,6 @@
-const db = require('./model/db');
+
+// const db = require('./model/db');
+import './model/db'
 const express = require('express');
 const router = require('./router/index')
 const morgan = require('morgan');
@@ -38,21 +40,7 @@ app.use(function (err, req, res, next) {
     res.send(util.inspect(err));
   }
 });
-// app.listen(3000, function () {
-//   console.log('程序正在监听3000端口')
-// });
-// 使用默认的namespace
-// io.on('connection', function (socket) {
-// console.log('a user connected');
-// socket.on('disconnect', function () {
-//   console.log('user disconnected');
-// });
-// });
 ioController(io);
 
-if(!module.parent) {
-  app.listen(3000, () => {
-    console.log('listening on *:3000');
-  })
-}
+export default app
 
