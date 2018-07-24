@@ -1,60 +1,112 @@
-const EventEmitter = require('events');
-const _ = require('lodash');
+import EventEmitter from 'events'
+import chalk from 'chalk'
 
 class Client extends EventEmitter {
 
-  constructor(socket, socketDb, io, user) {
+  /**
+   * 
+   * @param {SocketIO.Socket} socket 
+   * @param {*} socketDb 
+   * @param {SocketIO.Server} io 
+   */
+  constructor(socket, socketDb, io) {
     super()
     this.socket = socket
     this.socketDb = socketDb
-    this.roomId = ''
     this.io = io
-    this.user = user
-    this.init();
+    this.user = null
+    this.init()
   }
 
+  /**
+   *  初始化方法
+   */
   init() {
-    this.socketDb.addClient();
-    let that = this;
-    // 默认加入大厅
-    this.socketDb.addHall(function () {
-      // 添加成功后，通知大厅里面的其他成员，有新成员加入了
-      that.io.emit('announcement__hall',`欢迎新成员${that.socket.id}加入大厅`)
-    });
-    // 自定义创建房间
-    this.socket.on('createRoom', data => {
-      this.createRoom(data);
-    });
-    // 接收信息
+    // 设置服务器接受消息监听器
     this.socket.on('message', this.sendMessage)
+    // 设置创建房间监听器
+    this.socket.on('createRoom', this.createRoom)
+    // 设置离线监听器
+    this.socket.on('disconnect', this.disconnect)
+    // 设置错误监听器
+    this.socket.on('error', this.error)
   }
 
+  /**
+   * 离线监听器
+   */
+  disconnect(reason) {
+    chalk.red(reason)
+    // 1. 把所有对象remove掉
+    // 2. 所有添加的所有房间
+    this.socketDb.remove(this)
+  }
+
+  /**
+   * 错误监听器
+   * @param {*} error 
+   */
+  error(error) {
+    this.socket.emit('error', error)
+  }
+
+  /**
+   * 创建房间
+   * @param {string} newRoomId 
+   */
   createRoom(newRoomId) {
-    this.socket.join(newRoomId, err => {
-      if (err) {
-        console.log(`socket无法加入${newRoomId}`);
-        return;
-      }
-      let that = this;
-      this.socketDb.joinRoom(newRoomId, this.socket, function(arr) {
-        // 可以利用arr，告知在线人数等信息
-        that.io.to(newRoomId).emit('announcement__room',`欢迎新成员${that.socket.id}加入房间${newRoomId}`)
-        that.io.to(newRoomId).emit('announcement__room',`当前房间人数:${arr.length}`)
-      });
-    })
+    try {
+      // 創建房間
+      this.socket.join(newRoomId, err => {
+        if (err) {
+          chalk.red(`socket无法加入${newRoomId}`)
+          return
+        }
+        // 成功創建房間
+        this.socketDb.createRoom(newRoomId)
+      })
+    } catch (err) {
+      chalk.red(err)
+    }
   }
 
   sendMessage(message) {
     var type = message.type;
     switch (type) {
-      case 'broadcast':
+      case 'privateMessage':
+      case 'roomMessage':
+        this._sendRoomAndProvateMessage(message)
         break;
-      case 'hall':
-        break;
-      case 'broadcast-all':
-        break;
+      case 'hallMessage':
+      default:
+        this._sendHallMessage(message)
     }
+  }
+
+  /**
+   * 發送大廳消息
+   * @param {Object} message 
+   */
+  _sendHallMessage(message) {
+
+  }
+
+  _sendRoomAndProvateMessage(message) {
+    let { rooomId, value } = message
+    if (!rooomId || !value) {
+      chalk.red('roomId 和 value 不能为空')
+      return
+    }
+    this.socket.to(rooomId).emit('RoomAndPrivateMessage', value);
+  }
+
+  setUser(user) {
+    this.user = user
+  }
+
+  getSocketId() {
+    return this.socket.id
   }
 }
 
-module.exports = Client;
+export default Client;

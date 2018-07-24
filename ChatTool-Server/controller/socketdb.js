@@ -1,47 +1,66 @@
-const _ = require('lodash');
+import Room from './room'
+import Client from './client'
 
-function SocketDB() {
-  this.roomNumber = 0; // 房间数量
-  this.totalClient = 0; // 总人数
-  this.roomMateNumber = {}; // 各个房间人数
-  this.hallClient = 0; //大厅人数
-}
+class SocketDB {
 
-SocketDB.prototype.addClient = function () {
-  this.totalClient++;
-}
-
-SocketDB.prototype.addHall = function (cb) {
-  this.hallClient++;
-  cb.apply(this)
-}
-
-SocketDB.prototype.leaveHall = function () {
-  this.hallClient--;
-}
-
-SocketDB.prototype.joinRoom = function (roomId, socket, cb) {
-  let arr;
-  if (_.isNil(this.roomMateNumber[roomId])) {
-    arr = new Array();
-    arr.push(socket);
-    this.roomMateNumber[roomId] = arr;
-  } else {
-    arr = this.roomMateNumber[roomId];
-    arr.push(socket);
+  constructor(io) {
+    /**
+     * 终极io对象，底层用于通信
+     */
+    this.io = io
+    /**
+     * 所有的client
+     */
+    this.clients = new Array()
+    /**
+     * 所有房间
+     */
+    this.rooms = new Array()
   }
-  cb.call(this, arr)
-}
 
-SocketDB.prototype.leaveRoom = function (roomId, socket) {
-  if (_.isNull(this.roomMateNumber[roomId])) {
-    return;
+  // 添加client对象
+  addClient(client) {
+    this.clients.push(client)
   }
-  var arr = this.roomMateNumber[roomId];
-  _.remove(arr, function (n) {
-    return n.id == socket.id
-  })
+
+  /**
+   * 删除disconnect的Client
+   * @param {Client} client 
+   */
+  removeClient(client) {
+    // 1. 删除Room中的Client
+    // 2. 删除totalClient中的client
+  }
+
+  /**
+   * 創建房間
+   * @param {string} roomId 
+   */
+  createRoom(roomId) {
+    let room = new Room(roomId)
+    this.rooms.push(room)
+  }
+
+  /**
+   * 创建Client对象
+   * @param {SocketIO.Socket} socket 
+   */
+  createClient(socket) {
+    let client = new Client(socket, this, this.io);
+    this.addClient(client)
+  }
+
+  /**
+   * 返回client对象
+   * @param {string} sid 
+   */
+  getClient(sid) {
+    this.clients.forEach((value, index) => {
+      if (value.getSocketId() === sid) {
+        return value
+      }
+    })
+  }
 }
 
-module.exports = new SocketDB();
-
+export default new SocketDB()

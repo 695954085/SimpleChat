@@ -1,4 +1,3 @@
-const util = require('util');
 const User = require('../model/user');
 const createError = require('http-errors');
 const jwt = require('jsonwebtoken');
@@ -7,7 +6,7 @@ const _ = require('lodash');
 const path = require('path');
 const fs = require('fs')
 const formidable = require('formidable')
-const myEmiter = require('./myeventemitter')
+import socketDb from './socketdb'
 
 function Admin() {
     // this.register = Admin.prototype.register.bind(this);
@@ -48,7 +47,7 @@ Admin.prototype.login = function (req, res, next) {
                     return;
                 }
                 user.token = token;
-                user.save(function (err, result) {
+                user.save(function (err) {
                     if (err) {
                         next(createError(err));
                         return;
@@ -56,12 +55,11 @@ Admin.prototype.login = function (req, res, next) {
                     var content = {
                         username: user.username,
                         avatar: user.avatar,
-                        id: user._id,
-                        token: token
+                        id: user._id
                     }
-                    res.send(content);
-                    // 登录成功 可以创建Client了
-                    myEmiter.emit('login_success', result)
+                    // 关联admin与client
+                    socketDb.getClient(sid).setUser(content)
+                    res.send(Object.assign(content, { token: token }));
                 })
             })
         })

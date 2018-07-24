@@ -1,5 +1,4 @@
 
-// const db = require('./model/db');
 import './model/db'
 const express = require('express');
 const router = require('./router/index')
@@ -10,7 +9,8 @@ const util = require("util");
 const app = module.exports = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const ioController = require('./controller/io');
+// const ioController = require('./controller/io');
+import ioController from './controller/io';
 const compression = require('compression');
 
 if (process.env.NODE_ENV == 'development') {
@@ -41,6 +41,5 @@ app.use(function (err, req, res, next) {
   }
 });
 ioController(io);
-
 export default app
 
