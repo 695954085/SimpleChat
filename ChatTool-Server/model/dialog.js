@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 var dialogSchema = mongoose.Schema({
   userList: [String], //用户列表
   owner: String, // 群主
-  username: String, // 事主
+  roomId: String,
   conversation: [{
     content: String,
     date: Date,
@@ -13,7 +13,6 @@ var dialogSchema = mongoose.Schema({
   }]
 })
 
+const Dialog = mongoose.model('dialog', dialogSchema);
 
-var Dialog = mongoose.model('dialog', dialogSchema);
-
-module.exports = Dialog;
+export default Dialog

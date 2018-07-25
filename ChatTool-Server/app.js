@@ -1,7 +1,7 @@
 require("babel-register");
-const app = require('./index')
+const server = require('./index')
 if (!module.parent) {
-  app.listen(3000, () => {
+  server.listen(3000, () => {
     console.log('listening on *:3000');
   })
 }

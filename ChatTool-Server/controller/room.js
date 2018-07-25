@@ -8,11 +8,21 @@ class Room {
 
   // 管理房间的socket
   joinRoom(client) {
-    this.clients.push(client)
+    // 如果client不存在才添加
+    if (this.clients.indexOf(client) === -1) {
+      this.clients.push(client)
+    }
   }
 
   leaveRoom(client) {
-
+    let index = this.clients.indexOf(client)
+    // client存在
+    if (index !== -1) {
+      this.clients.splice(index, 1)
+      // 删除成功
+      return true
+    }
+    return false
   }
 
   // 获取房间的房间号

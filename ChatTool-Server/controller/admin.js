@@ -176,4 +176,5 @@ Admin.prototype.user = function (req, res, next) {
         res.send(users)
     })
 }
+
 module.exports = new Admin();

@@ -1,18 +1,19 @@
 
 import './model/db'
-const express = require('express');
-const router = require('./router/index')
-const morgan = require('morgan');
-const errorhandler = require('errorhandler');
-const passport = require('passport');
-const util = require("util");
-const app = module.exports = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
-// const ioController = require('./controller/io');
-import ioController from './controller/io';
-const compression = require('compression');
+import express from 'express'
+import router from './router/index'
+import morgan from 'morgan'
+import errorhandler from 'errorhandler'
+import passport from 'passport'
+import util from 'util'
+import http from 'http'
+import SocketIO from 'socket.io'
+import ioController from './controller/io'
+import compression from 'compression'
 
+const app = express();
+const server = http.createServer(app);
+const io = SocketIO(server)
 if (process.env.NODE_ENV == 'development') {
   app.use(errorhandler())
 }
@@ -28,7 +29,8 @@ app.use(morgan(function (tokens, req, res) {
 app.use(compression());
 app.use(express.static('public'));
 app.use(function (req, res, next) {
-  res.setHeader('Access-Control-Allow-Origin','*')
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080')
+  res.setHeader('Access-Control-Allow-Credentials', true)
   next();
 })
 require('./passport')(passport);
@@ -41,5 +43,7 @@ app.use(function (err, req, res, next) {
   }
 });
 ioController(io);
-export default app
+
+module.exports = server
+// export default app
 
