@@ -1,4 +1,5 @@
-require("babel-register");
+require("babel-core/register");
+require("babel-polyfill");
 const server = require('./index')
 if (!module.parent) {
   server.listen(3000, () => {

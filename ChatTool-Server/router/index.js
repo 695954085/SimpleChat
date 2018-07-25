@@ -1,6 +1,6 @@
-var v1 = require('./v1');
+import v1 from './v1'
 
-module.exports = function (app) {
+export default function (app) {
   app.use('/v1',v1);
 }
 

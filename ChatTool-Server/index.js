@@ -1,4 +1,3 @@
-
 import './model/db'
 import express from 'express'
 import router from './router/index'
@@ -10,6 +9,7 @@ import http from 'http'
 import SocketIO from 'socket.io'
 import ioController from './controller/io'
 import compression from 'compression'
+import Passport from './passport'
 
 const app = express();
 const server = http.createServer(app);
@@ -33,7 +33,7 @@ app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Credentials', true)
   next();
 })
-require('./passport')(passport);
+Passport(passport)
 router(app);
 // error handler
 app.use(function (err, req, res, next) {
@@ -45,5 +45,3 @@ app.use(function (err, req, res, next) {
 ioController(io);
 
 module.exports = server
-// export default app
-

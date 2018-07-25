@@ -90,12 +90,17 @@ class SocketDB {
    * @param {string} sid 
    */
   getClient(sid) {
-    this.clients.forEach((value, index) => {
-      if (value.getSocketId() === sid) {
-        return value
+    try {
+      for (var client of this.clients) {
+        if (client.getSocketId() === sid) {
+          return client
+        }
       }
-    })
-    return null
+      return null
+    } catch (err) {
+      chalk.red(err)
+      return null
+    }
   }
 }
 

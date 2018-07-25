@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "errorhandler": "^1.5.0",
     "mocha": "^5.2.0",

@@ -1,8 +1,9 @@
-const express = require('express');
-const formidable = require('formidable');
-const bodyParser = require('body-parser');
-const admin = require('../controller/admin');
-const passport = require('passport');
+import express from 'express'
+import formidable from 'formidable'
+import bodyParser from 'body-parser'
+import admin from '../controller/admin'
+import passport from 'passport'
+
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 var router = express.Router();
@@ -32,5 +33,5 @@ router.post('/avatar', passport.authenticate('bearer', { session: false }), admi
 //用户添加群
 router.post('/group', passport.authenticate('bearer', { session: false }), )
 
-module.exports = router;
+export default router
 

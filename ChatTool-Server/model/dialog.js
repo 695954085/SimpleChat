@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
 
 // 将来可以用来查看历史
 var dialogSchema = mongoose.Schema({

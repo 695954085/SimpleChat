@@ -18,9 +18,14 @@ class Client extends EventEmitter {
     this.socketDb = socketDb
     this.io = io
     this.user = null
-    this.init()
     // client拥有的房间
     this.rooms = new Array()
+    
+    this.sendMessage = this.sendMessage.bind(this)
+    this.createRoom = this.createRoom.bind(this)
+    this.error = this.error.bind(this)
+    this.disconnect = this.disconnect.bind(this)
+    this.init()
   }
 
   /**
@@ -41,11 +46,15 @@ class Client extends EventEmitter {
    * 离线监听器
    */
   disconnect(reason) {
-    chalk.red(reason)
-    chalk.red(`${this.socket.id} 离线`)
-    // 1. 把所有对象remove掉
-    // 2. 所有添加的所有房间
-    this.socketDb.removeClient(this)
+    try {
+      chalk.red(reason)
+      chalk.red(`${this.socket} 离线`)
+      // 1. 把所有对象remove掉
+      // 2. 所有添加的所有房间
+      this.socketDb.removeClient(this)
+    } catch (err) {
+
+    }
   }
 
   /**
