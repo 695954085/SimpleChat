@@ -7,7 +7,8 @@ var userSchema = mongoose.Schema({
   avatar: String,
   date: Date,
   token: String,
-  email: String
+  email: String,
+  rooms: [String] // 用户持有的房间
 })
 
 // 密码验证

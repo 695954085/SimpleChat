@@ -63,7 +63,7 @@ class SocketDB {
   createRoom(roomId, client) {
     // 判断这个room是否已经存在。 如果存在就加入房间，没有就创建房间并加入  
     if (this.getRoomIds().indexOf(roomId) === -1) {
-      let room = new Room(roomId)
+      let room = new Room(roomId, client.user.username)
       this.rooms.set(roomId, room)
       room.joinRoom(client)
     } else {

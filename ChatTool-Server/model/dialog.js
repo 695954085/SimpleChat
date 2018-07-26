@@ -2,9 +2,9 @@ import mongoose from 'mongoose'
 
 // 将来可以用来查看历史
 var dialogSchema = mongoose.Schema({
-  userList: [String], //用户列表
+  // userList: [String], //用户列表
   owner: String, // 群主
-  roomId: String,
+  roomId: String, 
   conversation: [{
     content: String,
     date: Date,

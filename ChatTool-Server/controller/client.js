@@ -1,5 +1,6 @@
 import EventEmitter from 'events'
 import chalk from 'chalk'
+import Dialog from '../model/dialog'
 
 /**
  * 此类是user和socket结合类
@@ -20,7 +21,6 @@ class Client extends EventEmitter {
     this.user = null
     // client拥有的房间
     this.rooms = new Array()
-    
     this.sendMessage = this.sendMessage.bind(this)
     this.createRoom = this.createRoom.bind(this)
     this.error = this.error.bind(this)
@@ -79,9 +79,10 @@ class Client extends EventEmitter {
             chalk.red(`socket无法加入${newRoomId}`)
             return
           }
+          chalk.green(`${this.socket.id}成功加入${this.newRoomId}`)
           // 成功創建房間/加入房间
           this.rooms.push(newRoomId)
-          this.socketDb.createRoom(newRoomId)
+          this.socketDb.createRoom(newRoomId, this)
         })
       }
     } catch (err) {
@@ -89,12 +90,12 @@ class Client extends EventEmitter {
     }
   }
 
-  sendMessage(message) {
+  sendMessage(message, callback) {
     var type = message.type;
     switch (type) {
       case 'privateMessage':
       case 'roomMessage':
-        this._sendRoomAndProvateMessage(message)
+        this._sendRoomAndProvateMessage(message, callback)
         break;
       case 'hallMessage':
       default:
@@ -107,7 +108,8 @@ class Client extends EventEmitter {
    * @param {Object} message 
    */
   _sendHallMessage(message) {
-
+    // everyone gets it but the sender
+    this.socket.broadcast.emit('HallMessage', message)
   }
 
   _sendRoomAndProvateMessage(message) {
@@ -116,7 +118,12 @@ class Client extends EventEmitter {
       chalk.red('roomId 和 value 不能为空')
       return
     }
-    this.socket.to(rooomId).emit('RoomAndPrivateMessage', value);
+    // this.socket.to(rooomId).emit('RoomAndPrivateMessage', function (data, fn) {
+    //   // 客户端收到消息时候回调
+    //   // acknowledgements are not supported when emitting from namespace.
+    //   // acknowledgements are not supported when broadcasting.
+    // });
+    this.socket.to(rooomId).emit('RoomAndPrivateMessage', message)
   }
 
   setUser(user) {
