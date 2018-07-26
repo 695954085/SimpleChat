@@ -75,7 +75,7 @@ class Client extends EventEmitter {
       if (this.user === null) {
         callback({
           message: '該用戶尚未登錄',
-          errorCode: 0
+          error: 0
         })
         return;
       }
@@ -107,7 +107,7 @@ class Client extends EventEmitter {
     if (this.user === null && callback) {
       callback({
         message: '該用戶尚未登錄',
-        errorCode: 0
+        error: 0
       })
       return
     }
@@ -134,25 +134,25 @@ class Client extends EventEmitter {
 
   _sendRoomAndProvateMessage(message, callback) {
     try {
-      let { rooomId, value } = message
-      if (!rooomId || !value) {
+      let { roomId, value } = message
+      if (!roomId || !value) {
         console.log(chalk.red('roomId 和 value 不能为空'))
         return
       }
-      // this.socket.to(rooomId).emit('RoomAndPrivateMessage', function (data, fn) {
+      // this.socket.to(roomId).emit('RoomAndPrivateMessage', function (data, fn) {
       //   // 客户端收到消息时候回调
       //   // acknowledgements are not supported when emitting from namespace.
       //   // acknowledgements are not supported when broadcasting.
       // });
-      this.socket.to(rooomId).emit('RoomAndPrivateMessage', message)
+      this.socket.to(roomId).emit('RoomAndPrivateMessage', message)
       callback({
-        message: `${this.user.username} 發送到${this.rooomId}房間的消息，成功發送`,
+        message: `${this.user.username} 發送到${this.roomId}房間的消息，成功發送`,
         error: -1
       })
     } catch (err) {
-      console.log(chalk.red(`${this.user.username} 發送到${this.rooomId}房間的消息，发送失败` + err))
+      console.log(chalk.red(`${this.user.username} 發送到${this.roomId}房間的消息，发送失败` + err))
       callback({
-        message: `${this.user.username} 發送到${this.rooomId}房間的消息，发送失败`,
+        message: `${this.user.username} 發送到${this.roomId}房間的消息，发送失败`,
         error: 0
       })
     }

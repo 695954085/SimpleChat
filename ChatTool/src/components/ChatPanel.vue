@@ -14,7 +14,7 @@
         </el-popover>
       </div>
       <div class="chat-window-body">
-        <MessageItem :time="messageList.time" :sourceName="messageList.sourceName" :sendContent="messageList.sendContent" :direction="messageList.direction" :key="messageList.id" :index="'messageList_'+index" v-for="(messageList,index) in messageLists">
+        <MessageItem :time="messageList.time" :sourceName="messageList.sourceName" :sendContent="messageList.value" :direction="messageList.direction" :key="messageList.id" :index="'messageList_'+index" v-for="(messageList,index) in messageLists">
         </MessageItem>
       </div>
       <div class="chat-window-footer">
@@ -55,8 +55,8 @@ export default {
       messageLists: []
       // messageLists:
       // [
-      //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "sendContent": "testmessage1", "direction": "left" },
-      //   { "id": "message2", "time": "20180601", "sourceName": "yyy", "sendContent": "testmessage2", "direction": "right" }
+      //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "value": "testmessage1", "direction": "left" },
+      //   { "id": "message2", "time": "20180601", "sourceName": "yyy", "value": "testmessage2", "direction": "right" }
       // ],
     };
   },
@@ -65,7 +65,9 @@ export default {
       console.log("socket connected");
     },
     disconnect: function(val) {
+
       console.log(val);
+      //清理数据，，路由智慧登录
     },
     error: function(val) {
       console.log(val);
@@ -86,28 +88,32 @@ export default {
   },
   methods: {
     sendMessage() {
-      // this.messageLists.push({ "time": "20180531", "sourceName": this.$store.state.userName, "sendContent": this.textarea, "direction": "right" });
+      // this.messageLists.push({ "time": "20180531", "sourceName": this.$store.state.userName, "value": this.textarea, "direction": "right" });
 
       // $socket is socket.io-client instance
       if (this.textarea != "") {
         let chatmessage = {
           time: this.getNowFormatDate(),
-          sendContent: this.textarea,
+          value: this.textarea,
           sourceName: this.$store.state.userName
         };
         if (this.$store.state.currentGroupName === "所有用户") {
           chatmessage.type = "hallMessage";
         } else {
           chatmessage.type = "roomMessage";
-          chatmessage.rooomId = this.$store.state.currentGroupId;
+          chatmessage.roomId = this.$store.state.currentGroupId;
         }
         //发给socket.io
         this.$socket.emit("message", chatmessage, data => {
           console.log(data);
+          if (data.error === -1) {
+            chatmessage.direction = "right";
+            this.messageLists.push(chatmessage);
+          }
+          if(data.error===0){
+            console.error(data.message);
+          }
         });
-        //自己的消息发出去，，应该是确认别人收了才能自己插上。。
-        chatmessage.direction = "right";
-        this.messageLists.push(chatmessage);
       }
     },
     getNowFormatDate() {
