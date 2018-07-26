@@ -69,8 +69,16 @@ class Client extends EventEmitter {
    * 创建房间/加入房间
    * @param {string} newRoomId 
    */
-  createRoom(newRoomId) {
+  createRoom(newRoomId, callback) {
     try {
+      // 判斷是否已經登錄
+      if (this.user === null) {
+        callback({
+          message: '該用戶尚未登錄',
+          errorCode: 0
+        })
+        return;
+      }
       // 如果socket在该房间已经存在，那么就不用再创建或者加入了
       if (this.rooms.indexOf(newRoomId) === -1) {
         // 創建房間
@@ -83,6 +91,11 @@ class Client extends EventEmitter {
           // 成功創建房間/加入房间
           this.rooms.push(newRoomId)
           this.socketDb.createRoom(newRoomId, this)
+
+          callback({
+            message: `成功创建/加入${newRoomId}房间`,
+            error: -1
+          })
         })
       }
     } catch (err) {
@@ -91,6 +104,13 @@ class Client extends EventEmitter {
   }
 
   sendMessage(message, callback) {
+    if (this.user === null && callback) {
+      callback({
+        message: '該用戶尚未登錄',
+        errorCode: 0
+      })
+      return
+    }
     var type = message.type;
     switch (type) {
       case 'privateMessage':
@@ -99,7 +119,7 @@ class Client extends EventEmitter {
         break;
       case 'hallMessage':
       default:
-        this._sendHallMessage(message)
+        this._sendHallMessage(message, callback)
     }
   }
 
@@ -112,18 +132,30 @@ class Client extends EventEmitter {
     this.socket.broadcast.emit('HallMessage', message)
   }
 
-  _sendRoomAndProvateMessage(message) {
-    let { rooomId, value } = message
-    if (!rooomId || !value) {
-      chalk.red('roomId 和 value 不能为空')
-      return
+  _sendRoomAndProvateMessage(message, callback) {
+    try {
+      let { rooomId, value } = message
+      if (!rooomId || !value) {
+        chalk.red('roomId 和 value 不能为空')
+        return
+      }
+      // this.socket.to(rooomId).emit('RoomAndPrivateMessage', function (data, fn) {
+      //   // 客户端收到消息时候回调
+      //   // acknowledgements are not supported when emitting from namespace.
+      //   // acknowledgements are not supported when broadcasting.
+      // });
+      this.socket.to(rooomId).emit('RoomAndPrivateMessage', message)
+      callback({
+        message: `${this.user.username} 發送到${this.rooomId}房間的消息，成功發送`,
+        error: -1
+      })
+    } catch (err) {
+      chalk.red(`${this.user.username} 發送到${this.rooomId}房間的消息，发送失败` + err)
+      callback({
+        message: `${this.user.username} 發送到${this.rooomId}房間的消息，发送失败`,
+        error: 0
+      })
     }
-    // this.socket.to(rooomId).emit('RoomAndPrivateMessage', function (data, fn) {
-    //   // 客户端收到消息时候回调
-    //   // acknowledgements are not supported when emitting from namespace.
-    //   // acknowledgements are not supported when broadcasting.
-    // });
-    this.socket.to(rooomId).emit('RoomAndPrivateMessage', message)
   }
 
   setUser(user) {
