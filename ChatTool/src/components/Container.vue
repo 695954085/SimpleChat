@@ -10,6 +10,9 @@
         <el-col :span="4">
           <el-button type="primary" @click="selectFriend = true">选择用户</el-button>
         </el-col>
+        <el-col :span="4">
+          <el-button type="primary" @click="createRoom">创建群组</el-button>
+        </el-col>
         <el-col :offset="12" :span="2">
           <span>{{sysUserName}}</span>
         </el-col>
@@ -48,29 +51,36 @@
   </el-container>
 </template>
 <script>
-
-import GroupList from '@/components/GroupList'
-import UserList from '@/components/UserList'
+import GroupList from "@/components/GroupList";
+import UserList from "@/components/UserList";
 
 export default {
-  name: 'Container',
+  name: "Container",
   components: {
     GroupList: GroupList,
-    UserList: UserList,
+    UserList: UserList
   },
   data() {
     return {
-      msg: '',
-      sysUserName: '',
+      msg: "",
+      sysUserName: "",
       selectFriend: false,
       checkList: [],
       groupLists: [],
       userLists: [
-        { id: "xxx", name: "xxx" },
-        { id: "yyy", name: "yyy" },
-        { id: "zzz", name: "zzz" },
+        { id: "aaa", name: "aaa" },
+        { id: "bbb", name: "bbb" },
+        { id: "ccc", name: "ccc" }
       ],
-      groupNameInput: 'default'
+      groupNameInput: "default"
+    };
+  },
+  sockets: {
+    connect: function() {
+      console.log("socket connected");
+    },
+    disconnect: function(val) {
+      console.log(val);
     }
   },
   methods: {
@@ -78,9 +88,11 @@ export default {
       if (this.groupNameInput != undefined && this.checkList != "") {
         console.log(this.groupNameInput + this.checkList);
         //随机生成一个串，，然后查库比对是否不存在，作为唯一的串赖标记一个群聊的id
-        let groupId = Math.random().toString(36).substr(2);
+        let groupId = Math.random()
+          .toString(36)
+          .substr(2);
         //创建房间
-        this.$socket.emit('createRoom', groupId);
+        this.$socket.emit("createRoom", groupId);
         //从checkList映射回所有的好友数据
         let selectMumber = [];
         for (let i = 0; i < this.checkList.length; i++) {
@@ -90,13 +102,28 @@ export default {
             }
           }
         }
-        this.groupLists.push({ id: groupId, name: this.groupNameInput, mumber: selectMumber });
+        this.groupLists.push({
+          id: groupId,
+          name: this.groupNameInput,
+          mumber: selectMumber
+        });
         this.selectFriend = false;
       }
     },
-    queryMumber(groupId){
-      if(groupId === "all_public_connect"){
-        return  [{ id: "xxx", name: "xxx" }, { id: "yyy", name: "yyy" }];
+    createRoom() {
+      //测试一下创建房间(this.$socket.id)
+    },
+    queryMumber(groupId) {
+      //应该是要emit一个客户端
+      if (groupId === "all_public_connect") {
+        return [
+          { id: "aaa", name: "aaa" },
+          { id: "bbb", name: "bbb" },
+          { id: "ccc", name: "ccc" }
+        ];
+      }
+      if (groupId === "room_1") {
+        return [{ id: this.state.$store.userId, name: userName },];
       }
       return null;
     }
@@ -104,7 +131,7 @@ export default {
   mounted() {
     this.sysUserName = this.$store.state.userName;
     var params = new URLSearchParams();
-    params.append('userId', this.$store.state.userid);
+    params.append("userId", this.$store.state.userid);
     //axios请求该用户的群聊情况
     // this.$http({
     //   url: `http://127.0.0.1:3000/v1/group`,
@@ -127,8 +154,13 @@ export default {
       name: "所有用户",
       mumber: this.queryMumber("all_public_connect")
     });
+    this.groupLists.push({
+      id: "room_01",
+      name: "房间一",
+      mumber: this.queryMumber("room_01")
+    });
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>

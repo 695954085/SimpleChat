@@ -52,7 +52,7 @@ export default {
   data() {
     return {
       textarea: "",
-      messageLists:[],
+      messageLists: []
       // messageLists:
       // [
       //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "sendContent": "testmessage1", "direction": "left" },
@@ -64,18 +64,23 @@ export default {
     connect: function() {
       console.log("socket connected");
     },
-    announcement__room: function(val) {
+    disconnect: function(val) {
       console.log(val);
     },
-    announcement__hall: function(val) {
+    error: function(val) {
       console.log(val);
     },
-    message: function(val) {
-      if(val.sourceName === this.$store.state.userName){
+    HallMessage: function(val) {
+      //服务端用广播，，不用预自己
+      if (val.sourceName === this.$store.state.userName) {
         val.direction = "right";
-      }else{
+      } else {
         val.direction = "left";
       }
+      this.messageLists.push(val);
+    },
+    RoomAndPrivateMessage: function(val) {
+      val.direction = "left";
       this.messageLists.push(val);
     }
   },
@@ -86,16 +91,23 @@ export default {
       // $socket is socket.io-client instance
       if (this.textarea != "") {
         let chatmessage = {
-          time:this.getNowFormatDate(),
-          sendContent:this.textarea,
+          time: this.getNowFormatDate(),
+          sendContent: this.textarea,
           sourceName: this.$store.state.userName
-        }
+        };
         if (this.$store.state.currentGroupName === "所有用户") {
-          //这个群组是通知所有的用户
-          this.$socket.emit("message", chatmessage);
+          chatmessage.type = "hallMessage";
         } else {
-          this.$socket.emit("createRoom", chatmessage);
+          chatmessage.type = "roomMessage";
+          chatmessage.rooomId = this.$store.state.currentGroupId;
         }
+        //发给socket.io
+        this.$socket.emit("message", chatmessage, data => {
+          console.log(data);
+        });
+        //自己的消息发出去，，应该是确认别人收了才能自己插上。。
+        chatmessage.direction = "right";
+        this.messageLists.push(chatmessage);
       }
     },
     getNowFormatDate() {
@@ -105,14 +117,23 @@ export default {
       let month = date.getMonth() + 1;
       let strDate = date.getDate();
       if (month >= 1 && month <= 9) {
-          month = "0" + month;
+        month = "0" + month;
       }
       if (strDate >= 0 && strDate <= 9) {
-          strDate = "0" + strDate;
+        strDate = "0" + strDate;
       }
-      let currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
-              + " " + date.getHours() + seperator2 + date.getMinutes()
-              + seperator2 + date.getSeconds();
+      let currentdate =
+        date.getFullYear() +
+        seperator1 +
+        month +
+        seperator1 +
+        strDate +
+        " " +
+        date.getHours() +
+        seperator2 +
+        date.getMinutes() +
+        seperator2 +
+        date.getSeconds();
       return currentdate;
     }
   },

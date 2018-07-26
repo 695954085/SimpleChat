@@ -6,24 +6,36 @@
 </template>
 <script>
 export default {
-  name: 'GroupList',
-  props: ["groupName","groupId","groupMumber"],
+  name: "GroupList",
+  props: ["groupName", "groupId", "groupMumber"],
   data() {
     return {
-      msg: ''
+      msg: ""
+    };
+  },
+  sockets: {
+    connect: function() {
+      console.log("socket connected");
+    },
+    disconnect: function(val) {
+      console.log(val);
+    },
+    error: function(val){
+      console.log(val);
     }
   },
   methods: {
     groupClick() {
       this.$store.state.currentGroupName = this.groupName;
       this.$store.state.currentGroupMumber = this.groupMumber;
-      alert(this.groupMumber);
-      this.$router.push({ path: '/chat/'+this.groupId });
+      this.$store.state.currentGroupId = this.groupId;
+      alert(this.$store.state.currentGroupId);
+      this.$socket.emit("createRoom",this.groupId);
+      this.$router.push({ path: "/chat/" + this.groupId });
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
-
 </style>

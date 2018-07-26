@@ -71,7 +71,7 @@ export default {
       var params = new URLSearchParams();
       params.append('username', this.loginForm.account);
       params.append('password', this.loginForm.checkPass);
-      params.append('sid', this.$socket.id)
+      params.append('sid', this.$socket.id);
       this.$http({
         url: `http://127.0.0.1:3000/v1/login`,
         method: 'post',
