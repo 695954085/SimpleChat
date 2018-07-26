@@ -17,7 +17,7 @@ class Room {
     })
     dialog.save((err) => {
       if (err) {
-        chalk.red(`${this.roomId} 房间创建失败`)
+        console.log(chalk.red(`${this.roomId} 房间创建失败`))
       }
     })
   }

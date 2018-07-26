@@ -65,7 +65,7 @@ class Admin {
                             socketDb.getClient(form.sid).setUser(content)
                             res.send(Object.assign(content, { token: token }));
                         } catch (err) {
-                            chalk.red(err)
+                            console.log(chalk.red(err))
                         }
                     })
                 })

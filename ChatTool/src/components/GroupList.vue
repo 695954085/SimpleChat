@@ -30,7 +30,9 @@ export default {
       this.$store.state.currentGroupMumber = this.groupMumber;
       this.$store.state.currentGroupId = this.groupId;
       alert(this.$store.state.currentGroupId);
-      this.$socket.emit("createRoom",this.groupId);
+      this.$socket.emit("createRoom",this.groupId, data =>{
+        console.log('createRoom')
+      });
       this.$router.push({ path: "/chat/" + this.groupId });
     }
   }

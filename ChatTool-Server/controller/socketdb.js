@@ -50,9 +50,9 @@ class SocketDB {
           }
         })
       }
-      chalk.red(`${client.socket.id} 删除成功`)
+      console.log(chalk.red(`${client.socket.id} 删除成功`))
     } else {
-      chalk.red(`${client.socket.id} 已经不存在`)
+      console.log(chalk.red(`${client.socket.id} 已经不存在`))
     }
   }
 
@@ -81,7 +81,7 @@ class SocketDB {
       let client = new Client(socket, this, this.io);
       this.addClient(client)
     } else {
-      chalk.red(`${socket.sid} 已存在`)
+      console.log(chalk.red(`${socket.sid} 已存在`));
     }
   }
 
@@ -98,7 +98,7 @@ class SocketDB {
       }
       return null
     } catch (err) {
-      chalk.red(err)
+      console.log(chalk.red(err))
       return null
     }
   }

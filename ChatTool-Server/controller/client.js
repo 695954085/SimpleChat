@@ -47,8 +47,8 @@ class Client extends EventEmitter {
    */
   disconnect(reason) {
     try {
-      chalk.red(reason)
-      chalk.red(`${this.socket} 离线`)
+      console.log(chalk.red(reason))
+      console.log(chalk.red(`${this.socket.id} 离线`));
       // 1. 把所有对象remove掉
       // 2. 所有添加的所有房间
       this.socketDb.removeClient(this)
@@ -84,10 +84,10 @@ class Client extends EventEmitter {
         // 創建房間
         this.socket.join(newRoomId, err => {
           if (err) {
-            chalk.red(`socket无法加入${newRoomId}`)
+            console.log(chalk.red(`socket无法加入${newRoomId}`))
             return
           }
-          chalk.green(`${this.socket.id}成功加入${this.newRoomId}`)
+          console.log(chalk.green(`${this.socket.id}成功加入${newRoomId}`))
           // 成功創建房間/加入房间
           this.rooms.push(newRoomId)
           this.socketDb.createRoom(newRoomId, this)
@@ -99,7 +99,7 @@ class Client extends EventEmitter {
         })
       }
     } catch (err) {
-      chalk.red(err)
+      console.log(chalk.red(err))
     }
   }
 
@@ -136,7 +136,7 @@ class Client extends EventEmitter {
     try {
       let { rooomId, value } = message
       if (!rooomId || !value) {
-        chalk.red('roomId 和 value 不能为空')
+        console.log(chalk.red('roomId 和 value 不能为空'))
         return
       }
       // this.socket.to(rooomId).emit('RoomAndPrivateMessage', function (data, fn) {
@@ -150,7 +150,7 @@ class Client extends EventEmitter {
         error: -1
       })
     } catch (err) {
-      chalk.red(`${this.user.username} 發送到${this.rooomId}房間的消息，发送失败` + err)
+      console.log(chalk.red(`${this.user.username} 發送到${this.rooomId}房間的消息，发送失败` + err))
       callback({
         message: `${this.user.username} 發送到${this.rooomId}房間的消息，发送失败`,
         error: 0
@@ -160,6 +160,7 @@ class Client extends EventEmitter {
 
   setUser(user) {
     this.user = user
+    console.log(chalk.green(`${this.socket.id}成功绑定${this.user.username}`))
   }
 
   getSocketId() {

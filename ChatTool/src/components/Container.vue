@@ -92,7 +92,9 @@ export default {
           .toString(36)
           .substr(2);
         //创建房间
-        this.$socket.emit("createRoom", groupId);
+        this.$socket.emit("createRoom", groupId, data => {
+          console.log('xxx')
+        });
         //从checkList映射回所有的好友数据
         let selectMumber = [];
         for (let i = 0; i < this.checkList.length; i++) {
