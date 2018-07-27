@@ -1,6 +1,8 @@
 import Room from './room'
 import Client from './client'
 import chalk from '../node_modules/chalk';
+import { Request, Response } from 'express'
+import Dialog from '../model/dialog'
 
 class SocketDB {
 
@@ -17,11 +19,14 @@ class SocketDB {
      * 所有房间
      */
     this.rooms = new Map()
+
+    this.getRoomDialog = this.getRoomDialog.bind(this)
+    this.getRoomOnlineClients = this.getRoomOnlineClients.bind(this)
   }
 
   // 获取房间所有房间id
-  getRoomIds() {
-    return Object.keys(this.rooms)
+  isExitsRoom(roomId) {
+    return this.rooms.get(roomId) ? true : false
   }
 
   // 添加client对象
@@ -62,7 +67,7 @@ class SocketDB {
    */
   createRoom(roomId, client) {
     // 判断这个room是否已经存在。 如果存在就加入房间，没有就创建房间并加入  
-    if (this.getRoomIds().indexOf(roomId) === -1) {
+    if (!this.isExitsRoom(roomId)) {
       let room = new Room(roomId, client.user.username)
       this.rooms.set(roomId, room)
       room.joinRoom(client)
@@ -101,6 +106,70 @@ class SocketDB {
       console.log(chalk.red(err))
       return null
     }
+  }
+
+  /**
+   * 获取某个房间数据
+   * @param {Request} req 
+   * @param {Response} res 
+   */
+  async getRoomDialog(req, res) {
+    try {
+      let roomId = req.params.roomId
+      if (!roomId)
+        throw "roomId不能为空"
+      let start = req.query.start
+      let end = req.query.end
+      if (!start || !end)
+        throw 'start或end不能为空'
+      let query = Dialog.find({ roomId: roomId })
+      query = query.slice('conversation', [parseInt(start), parseInt(end)])
+      let conversations = await query.exec()
+      res.json(conversations)
+    } catch (err) {
+      console.log(chalk.red(err))
+      res.send({
+        message: err,
+        error: 0
+      })
+    }
+  }
+
+  /**
+   * 获取指定房间的在线用户
+   * @param {Request} req 
+   * @param {Response} res 
+   */
+  getRoomOnlineClients(req, res) {
+    try {
+      let roomId = req.params.roomId
+      if (!roomId)
+        throw 'roomId不能为空'
+      let room = this.getRoom(roomId)
+      if (!room)
+        throw `${roomId}房间不存在`
+      let clients = room.getRoomClients()
+      let onlineClients = clients.map(client => {
+        return {
+          sid: client.socket.id,
+          username: client.user.username
+        }
+      })
+      res.send({
+        roomId: roomId,
+        onlineClients: onlineClients
+      })
+    } catch (err) {
+      console.log(chalk.red(err))
+      res.send({
+        message: err,
+        error: 0
+      })
+    }
+  }
+
+  getRoom(roomId) {
+    return this.rooms.get(roomId)
   }
 }
 

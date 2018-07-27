@@ -92,6 +92,20 @@ class Client extends EventEmitter {
           this.rooms.push(newRoomId)
           this.socketDb.createRoom(newRoomId, this)
 
+          // 向房间全部人推送在线人数的变化
+          // let onlineSocketIds = Object.keys(this.io.to(newRoomId).sockets)
+          // let onlineClients = onlineSocketIds.map(socketId => {
+          //   let client = this.socketDb.getClient(socketId)
+          //   return {
+          //     sid: socketId,
+          //     username: client.user.username
+          //   }
+          // })
+          // this.io.to(newRoomId).emit('online', {
+          //   roomId: newRoomId,
+          //   onlineClients: onlineClients
+          // })
+
           callback({
             message: `成功创建/加入${newRoomId}房间`,
             error: -1
@@ -104,22 +118,26 @@ class Client extends EventEmitter {
   }
 
   sendMessage(message, callback) {
-    if (this.user === null && callback) {
-      callback({
-        message: '該用戶尚未登錄',
-        error: 0
-      })
-      return
-    }
-    var type = message.type;
-    switch (type) {
-      case 'privateMessage':
-      case 'roomMessage':
-        this._sendRoomAndProvateMessage(message, callback)
-        break;
-      case 'hallMessage':
-      default:
-        this._sendHallMessage(message, callback)
+    try {
+      if (this.user === null && callback) {
+        callback({
+          message: '該用戶尚未登錄',
+          error: 0
+        })
+        return
+      }
+      let type = message.type;
+      switch (type) {
+        case 'privateMessage':
+        case 'roomMessage':
+          this._sendRoomAndProvateMessage(message, callback)
+          break;
+        case 'hallMessage':
+        default:
+          this._sendHallMessage(message, callback)
+      }
+    } catch (err) {
+      console.log(chalk.red(err))
     }
   }
 
@@ -148,6 +166,37 @@ class Client extends EventEmitter {
       callback({
         message: `${this.user.username} 發送到${this.roomId}房間的消息，成功發送`,
         error: -1
+      })
+
+      // MongoDB操作
+      // 1. 通过roomId找到dialog实例
+      Dialog.findOne({ roomId: roomId }, (err, res) => {
+        if (err) {
+          console.log(chalk.red('数据库操作异常'))
+          return
+        }
+        if (res == null) {
+          console.log(chalk.red(`${roomId}数据在dialog中不存在`))
+          return
+        }
+        // 2. 插入操作
+        if (res.conversation == null) {
+          let array = new Array()
+          res.conversation = array
+        }
+        res.conversation.push({
+          content: value,
+          date: new Date(),
+          username: this.user.username,
+          contentType: 'string'
+        })
+        res.save((err, dialog) => {
+          if (err) {
+            console.log(chalk.red(`dialog数据库操作失败, ${err}`))
+            return
+          }
+          console.log(chalk.green(`dialog数据库操作成功, ${dialog}`))
+        })
       })
     } catch (err) {
       console.log(chalk.red(`${this.user.username} 發送到${this.roomId}房間的消息，发送失败` + err))
