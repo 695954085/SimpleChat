@@ -6,6 +6,8 @@ function IoContoller(io) {
   io.on('connection', function (socket) {
     console.log(chalk.green('a user connected --------> ' + new Date() + ' -------> ' + socket.id))
     // let client = new Client(socket, socketDb, io);
+    if(socketDb.io === null)
+      socketDb.setIO(io)
     socketDb.createClient(socket)
   });
 }

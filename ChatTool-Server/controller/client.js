@@ -1,11 +1,11 @@
-import EventEmitter from 'events'
 import chalk from 'chalk'
 import Dialog from '../model/dialog'
+import util from 'util'
 
 /**
  * 此类是user和socket结合类
  */
-class Client extends EventEmitter {
+class Client {
 
   /**
    * 
@@ -14,7 +14,6 @@ class Client extends EventEmitter {
    * @param {SocketIO.Server} io 
    */
   constructor(socket, socketDb, io) {
-    super()
     this.socket = socket
     this.socketDb = socketDb
     this.io = io
@@ -25,6 +24,7 @@ class Client extends EventEmitter {
     this.createRoom = this.createRoom.bind(this)
     this.error = this.error.bind(this)
     this.disconnect = this.disconnect.bind(this)
+    this.deleteRoom = this.deleteRoom.bind(this)
     this.init()
   }
 
@@ -40,6 +40,41 @@ class Client extends EventEmitter {
     this.socket.on('disconnect', this.disconnect)
     // 设置错误监听器
     this.socket.on('error', this.error)
+    // 设置离开/删除房间(非正常离线，用户主动删除房间)
+    this.socket.on('deleteRoom', this.deleteRoom)
+  }
+
+  /**
+   * 用户删除房间
+   */
+  deleteRoom(roomId, callback) {
+    try {
+      if (this.user == null)
+        throw `${this.socket.id}尚未登录，不能删除${roomId}房间`
+      if (this.rooms.indexOf(roomId) == -1)
+        throw `${this.user.username}不存在该${roomId}房间`
+      this.rooms.splice(this.rooms.indexOf(roomId), 1)
+      let room = this.socketDb.getRoom(roomId)
+      if (room == null)
+        throw `${roomId}房间不存在`
+      // 1. room删除client对象
+      room.leaveRoom(this)
+      // 2. 数据库dialog userList删除user
+      Dialog.updateOne({ roomId: roomId }, { $pull: { userList: this.user.username } }, (err, dialog) => {
+        if (err) {
+          console.log(chalk.red(err))
+          return
+        }
+        console.log(chalk.green(dialog))
+      })
+      // 3. 
+      this._sendOnlineMessage(roomId)
+    } catch (err) {
+      callback({
+        error: 0,
+        message: err
+      })
+    }
   }
 
   /**
@@ -49,11 +84,15 @@ class Client extends EventEmitter {
     try {
       console.log(chalk.red(reason))
       console.log(chalk.red(`${this.socket.id} 离线`));
-      // 1. 把所有对象remove掉
-      // 2. 所有添加的所有房间
+      // 1. client所添加的room都离开
+      // 2. 如果room没有用户了，就删除
+      // 3. 通知所有用户
+      this.rooms.forEach(roomId => {
+        this._sendOnlineMessage(roomId)
+      })
       this.socketDb.removeClient(this)
     } catch (err) {
-
+      console.log(chalk.red(err))
     }
   }
 
@@ -69,7 +108,7 @@ class Client extends EventEmitter {
    * 创建房间/加入房间
    * @param {string} newRoomId 
    */
-  createRoom(newRoomId, callback) {
+  async createRoom(newRoomId, callback) {
     try {
       // 判斷是否已經登錄
       if (this.user === null) {
@@ -82,7 +121,7 @@ class Client extends EventEmitter {
       // 如果socket在该房间已经存在，那么就不用再创建或者加入了
       if (this.rooms.indexOf(newRoomId) === -1) {
         // 創建房間
-        this.socket.join(newRoomId, err => {
+        this.socket.join(newRoomId, async err => {
           if (err) {
             console.log(chalk.red(`socket无法加入${newRoomId}`))
             return
@@ -90,28 +129,39 @@ class Client extends EventEmitter {
           console.log(chalk.green(`${this.socket.id}成功加入${newRoomId}`))
           // 成功創建房間/加入房间
           this.rooms.push(newRoomId)
-          this.socketDb.createRoom(newRoomId, this)
+          await this.socketDb.createRoom(newRoomId, this)
 
           // 向房间全部人推送在线人数的变化
-          // let onlineSocketIds = Object.keys(this.io.to(newRoomId).sockets)
-          // let onlineClients = onlineSocketIds.map(socketId => {
-          //   let client = this.socketDb.getClient(socketId)
-          //   return {
-          //     sid: socketId,
-          //     username: client.user.username
-          //   }
-          // })
-          // this.io.to(newRoomId).emit('online', {
-          //   roomId: newRoomId,
-          //   onlineClients: onlineClients
-          // })
-
+          this._sendOnlineMessage(newRoomId)
           callback({
             message: `成功创建/加入${newRoomId}房间`,
             error: -1
           })
         })
       }
+    } catch (err) {
+      console.log(chalk.red(err))
+    }
+  }
+
+  _sendOnlineMessage(roomId) {
+    try {
+      // 向房间全部人推送在线人数的变化
+      let onlineSocketIds = Object.keys(this.io.to(roomId).sockets)
+      let onlineClients = onlineSocketIds.filter(socketId => {
+        let client = this.socketDb.getClient(socketId)
+        return client.user === null ? false : true
+      }).map(socketId => {
+        let client = this.socketDb.getClient(socketId)
+        return {
+          sid: socketId,
+          username: client.user.username
+        }
+      })
+      this.io.to(roomId).emit('online', {
+        roomId: roomId,
+        onlineClients: onlineClients
+      })
     } catch (err) {
       console.log(chalk.red(err))
     }
@@ -164,7 +214,7 @@ class Client extends EventEmitter {
       // });
       this.socket.to(roomId).emit('RoomAndPrivateMessage', message)
       callback({
-        message: `${this.user.username} 發送到${this.roomId}房間的消息，成功發送`,
+        message: `${this.user.username} 發送到${roomId}房間的消息，成功發送`,
         error: -1
       })
 
@@ -199,7 +249,7 @@ class Client extends EventEmitter {
         })
       })
     } catch (err) {
-      console.log(chalk.red(`${this.user.username} 發送到${this.roomId}房間的消息，发送失败` + err))
+      console.log(chalk.red(`${this.user.username} 發送到${roomId}房間的消息，发送失败` + err))
       callback({
         message: `${this.user.username} 發送到${this.roomId}房間的消息，发送失败`,
         error: 0

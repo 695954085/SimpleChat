@@ -6,11 +6,11 @@ import Dialog from '../model/dialog'
 
 class SocketDB {
 
-  constructor(io) {
+  constructor() {
     /**
      * 终极io对象，底层用于通信
      */
-    this.io = io
+    this.io = null
     /**
      * 所有的client
      */
@@ -22,6 +22,10 @@ class SocketDB {
 
     this.getRoomDialog = this.getRoomDialog.bind(this)
     this.getRoomOnlineClients = this.getRoomOnlineClients.bind(this)
+  }
+
+  setIO(io) {
+    this.io = io
   }
 
   // 获取房间所有房间id
@@ -47,13 +51,21 @@ class SocketDB {
       // 删除房间中的client
       let clientRooomIds = client.getRooms()
       if (clientRooomIds.length > 0) {
-        clientRooomIds.forEach((roomId, index) => {
+        // clientRooomIds.forEach((roomId, index) => {
+        //   let room = this.rooms.get(roomId)
+        //   room.leaveRoom(client)
+        //   if (room.getRoomClientCount() === 0) {
+        //     this.rooms.delete(roomId)
+        //   }
+        // })
+        while (clientRooomIds.length > 0) {
+          let roomId = clientRooomIds.pop()
           let room = this.rooms.get(roomId)
           room.leaveRoom(client)
           if (room.getRoomClientCount() === 0) {
             this.rooms.delete(roomId)
           }
-        })
+        }
       }
       console.log(chalk.red(`${client.socket.id} 删除成功`))
     } else {
@@ -65,15 +77,16 @@ class SocketDB {
    * 創建房間/加入房间
    * @param {string} roomId 
    */
-  createRoom(roomId, client) {
+  async createRoom(roomId, client) {
     // 判断这个room是否已经存在。 如果存在就加入房间，没有就创建房间并加入  
     if (!this.isExitsRoom(roomId)) {
       let room = new Room(roomId, client.user.username)
+      await room.init()
       this.rooms.set(roomId, room)
-      room.joinRoom(client)
+      await room.joinRoom(client)
     } else {
       let room = this.rooms.get(roomId)
-      room.joinRoom(client)
+      await room.joinRoom(client)
     }
   }
 
