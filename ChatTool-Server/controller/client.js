@@ -47,7 +47,7 @@ class Client {
   /**
    * 用户删除房间
    */
-  deleteRoom(roomId, callback) {
+  async deleteRoom(roomId, callback) {
     try {
       if (this.user == null)
         throw `${this.socket.id}尚未登录，不能删除${roomId}房间`
@@ -60,15 +60,25 @@ class Client {
       // 1. room删除client对象
       room.leaveRoom(this)
       // 2. 数据库dialog userList删除user
-      Dialog.updateOne({ roomId: roomId }, { $pull: { userList: this.user.username } }, (err, dialog) => {
-        if (err) {
-          console.log(chalk.red(err))
-          return
-        }
-        console.log(chalk.green(dialog))
-      })
-      // 3. 
+      // Dialog.updateOne({ roomId: roomId }, { $pull: { userList: this.user.username } }, (err, dialog) => {
+      //   if (err) {
+      //     console.log(chalk.red(err))
+      //     return
+      //   }
+      //   console.log(chalk.green(dialog))
+      // })
+      let query = Dialog.updateOne({ roomId: roomId }, { $pull: { userList: this.user.username } })
+      let dialog = await query.exec()
+      console.log(chalk.green(dialog))
+      // 2.2 socket离开房间
+      this.socket.leave(roomId)
+      // 3. 推送房间在线人数
       this._sendOnlineMessage(roomId)
+
+      callback({
+        error: -1,
+        message: `${roomId}房間userList成功刪除${this.user.username}`
+      })
     } catch (err) {
       callback({
         error: 0,
@@ -84,6 +94,7 @@ class Client {
     try {
       console.log(chalk.red(reason))
       console.log(chalk.red(`${this.socket.id} 离线`));
+      this.socket.leaveAll()
       // 1. client所添加的room都离开
       // 2. 如果room没有用户了，就删除
       // 3. 通知所有用户
@@ -147,14 +158,20 @@ class Client {
   _sendOnlineMessage(roomId) {
     try {
       // 向房间全部人推送在线人数的变化
-      let onlineSocketIds = Object.keys(this.io.to(roomId).sockets)
-      let onlineClients = onlineSocketIds.filter(socketId => {
-        let client = this.socketDb.getClient(socketId)
-        return client.user === null ? false : true
-      }).map(socketId => {
-        let client = this.socketDb.getClient(socketId)
+      // let onlineSocketIds = Object.keys(this.io.to(roomId).sockets)
+      // let onlineClients = onlineSocketIds.filter(socketId => {
+      //   let client = this.socketDb.getClient(socketId)
+      //   return client.user === null ? false : true
+      // }).map(socketId => {
+      //   let client = this.socketDb.getClient(socketId)
+      //   return {
+      //     sid: socketId,
+      //     username: client.user.username
+      //   }
+      // })
+      let onlineClients = this.socketDb.getRoom(roomId).clients.map(client => {
         return {
-          sid: socketId,
+          sid: client.socket.id,
           username: client.user.username
         }
       })
@@ -205,6 +222,10 @@ class Client {
       let { roomId, value } = message
       if (!roomId || !value) {
         console.log(chalk.red('roomId 和 value 不能为空'))
+        callback({
+          message: 'roomId 和 value 不能为空',
+          code: 0
+        })
         return
       }
       // this.socket.to(roomId).emit('RoomAndPrivateMessage', function (data, fn) {
