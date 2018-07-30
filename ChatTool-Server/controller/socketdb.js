@@ -3,6 +3,7 @@ import Client from './client'
 import chalk from '../node_modules/chalk';
 import { Request, Response } from 'express'
 import Dialog from '../model/dialog'
+import User from '../model/user';
 
 class SocketDB {
 
@@ -171,6 +172,29 @@ class SocketDB {
       res.send({
         roomId: roomId,
         onlineClients: onlineClients
+      })
+    } catch (err) {
+      console.log(chalk.red(err))
+      res.send({
+        message: err,
+        error: 0
+      })
+    }
+  }
+
+  /**
+   * 獲取某個用戶擁有的房間號
+   * @param {Request} req 
+   * @param {Response} res 
+   */
+  async getUserRooms(req, res) {
+    try {
+      let username = req.params.username
+      let query = User.findOne({ username: username })
+      let result = await query.exec()
+      res.send({
+        username: username,
+        rooms: result.rooms
       })
     } catch (err) {
       console.log(chalk.red(err))

@@ -1,5 +1,6 @@
 import chalk from 'chalk'
 import Dialog from '../model/dialog'
+import User from '../model/user'
 import util from 'util'
 
 /**
@@ -75,6 +76,13 @@ class Client {
       // 3. 推送房间在线人数
       this._sendOnlineMessage(roomId)
 
+      User.updateOne({ username: this.user.username }, { $pull: { rooms: roomId } }, (err, raw) => {
+        if (err) {
+          console.log(chalk.red(err))
+          return
+        }
+        console.log(chalk.green(util.inspect(raw)))
+      })
       callback({
         error: -1,
         message: `${roomId}房間userList成功刪除${this.user.username}`
@@ -147,6 +155,20 @@ class Client {
           callback({
             message: `成功创建/加入${newRoomId}房间`,
             error: -1
+          })
+
+          // 向user collection中加入rooms
+          User.findOne({ username: this.user.username }, (err, res) => {
+            if (err) {
+              console.log(chalk.red(err))
+              return
+            }
+            if (res != null) {
+              if (res.rooms.indexOf(newRoomId) === -1) {
+                res.rooms.push(newRoomId)
+                res.save()
+              }
+            }
           })
         })
       }

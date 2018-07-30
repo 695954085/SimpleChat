@@ -58,7 +58,6 @@ class Room {
     try {
       if (this.clients.indexOf(client) === -1) {
         this.clients.push(client)
-
         if (client.user == null) {
           console.log(chalk.red(`${client}的user不能为空`))
         }
