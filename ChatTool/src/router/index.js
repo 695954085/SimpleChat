@@ -31,8 +31,8 @@ const router = new Router({
       }, ]
     },
     {
-      path: '/login',
-      component: Main,
+      path: '/Main2',
+      component: Main2,
       data: function () {
         return {
           isLogin:true,
@@ -65,17 +65,6 @@ const router = new Router({
       component: MessageItem,
       name: '',
       hidden: true,
-    },
-    {
-      path: '/testMain2',
-      component: Main2,
-      hidden: true,
-      children: [{
-        path: '/testMain2/*',
-        component: ChatPanel,
-        name: '',
-        hidden: true
-      }, ]
     },
   ]
 });

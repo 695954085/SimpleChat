@@ -237,6 +237,10 @@ class Client {
   _sendHallMessage(message) {
     // everyone gets it but the sender
     this.socket.broadcast.emit('HallMessage', message)
+    callback({
+      message: `${this.user.username} 發送到大厅的消息，成功發送`,
+      code: -1
+    })
   }
 
   _sendRoomAndProvateMessage(message, callback) {

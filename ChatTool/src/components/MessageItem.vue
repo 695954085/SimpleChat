@@ -37,8 +37,6 @@ export default {
 <style lang="scss" scoped>
 /* 消息窗口 begin*/
 
-$color-green: #1AAD19;
-$font-color: #333;
 $send-button-color:#F57623;
 
 @mixin chatTool-message-triangle {

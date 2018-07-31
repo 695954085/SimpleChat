@@ -2,8 +2,27 @@
 <div class="chat-main" @click="showOnline = false">
   <div class="chat-container">
     <div class="chat-container-left" v-show="loginState">
-      <img class="chat-component-avatar avatar" src="../../assets/defaultAvatar.jpg" @click="setAvatar">
+      <img class="chat-component-avatar" src="../../assets/defaultAvatar.jpg" @click="setAvatar = true">
       <ButtonList></ButtonList>
+      <el-dialog
+        title="个人信息设置"
+        :visible.sync="setAvatar"
+        width="30%">
+        <div class="chat-welcome-userName">你好,{{$store.state.userName}}</div>
+        <el-upload
+          class="avatar-uploader"
+          action="http://127.0.0.1:3000/v1/avatar"
+          :show-file-list="false"
+          :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload">
+          <img v-if="imageUrl" :src="imageUrl" class="avatar">
+          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+        </el-upload>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="setAvatar = false">取 消</el-button>
+          <el-button type="primary" @click="setAvatar = false">确 定</el-button>
+        </span>
+      </el-dialog>
     </div>
     <div class="chat-container-right">
       <div class="chat-container-feature" v-show="loginState">
@@ -25,6 +44,7 @@
 </div>
 </template>
 <script>
+import { mapGetters } from "vuex";
 import ButtonList from "@/components/imitate/ButtonList";
 import LinkMan from "@/components/imitate/LinkMan";
 
@@ -32,7 +52,7 @@ export default {
   name: "Main2",
   components: {
     ButtonList: ButtonList,
-    LinkMan: LinkMan,
+    LinkMan: LinkMan
   },
   data() {
     return {
@@ -45,9 +65,14 @@ export default {
         checkPass: "",
         email: ""
       },
+      setAvatar: false,
+      imageUrl: ""
     };
   },
   methods: {
+    userName() {
+      return this.$store.state.userName;
+    },
     createGroup() {
       if (this.groupNameInput != undefined && this.checkList != "") {
         console.log(this.groupNameInput + this.checkList);
@@ -93,44 +118,40 @@ export default {
       }
       return null;
     },
-    setAvatar() {
-      alert(this.$store.state.userName);
+    handleAvatarSuccess(res, file) {
+      this.imageUrl = URL.createObjectURL(file.raw);
+    },
+    beforeAvatarUpload(file) {
+      const isJPG = file.type === "image/jpeg";
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isJPG) {
+        this.$message.error("上传头像图片只能是 JPG 格式!");
+      }
+      if (!isLt2M) {
+        this.$message.error("上传头像图片大小不能超过 2MB!");
+      }
+      return isJPG && isLt2M;
     }
   },
   mounted() {
-    // this.groupLists.push({
-    //   id: "all_public_connect",
-    //   name: "所有用户",
-    //   mumber: this.queryMumber("all_public_connect")
-    // });
-    // this.groupLists.push({
-    //   id: "room_01",
-    //   name: "房间一",
-    //   mumber: this.queryMumber("room_01")
-    // });
+    //方便测试
+    this.$store.state.loginState = true;
   },
-  computed:{
-    loginState(){
+  computed: {
+    loginState() {
       return this.$store.state.loginState;
     },
-    groupLists(){
+    groupLists() {
       return this.$store.state.groupLists;
     },
-    activeId(){
+    activeId() {
       return this.$store.state.currentGroupId;
     }
   }
 };
 </script>
 <style lang="scss" scoped>
-
-/*头像样式*/
-.chat-component-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
-}
-/*头像样式*/
 
 .chat-main {
   width: 100%;
@@ -160,8 +181,11 @@ export default {
     position: relative;
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
-    .avatar {
+    .chat-component-avatar {
       margin-top: 50px;
+      width: 60px;
+      height: 60px;
+      border-radius: 30px;
       cursor: pointer;
     }
     .chat-container-buttonList {
@@ -237,5 +261,38 @@ export default {
     }
   }
 }
+</style>
+
+<style lang="scss">
+/*图片上传 start*/
+.chat-welcome-userName{
+  margin : 20px 0;
+}
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader .el-upload:hover {
+  border-color: #409eff;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
+}
+.avatar {
+  width: 100px;
+  height: 100px;
+  display: block;
+}
+
+/*图片上传 end*/
 </style>
 

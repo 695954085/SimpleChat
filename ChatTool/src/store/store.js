@@ -29,6 +29,9 @@ const store = new Vuex.Store({
     },
     del_token(state, token) {
       state.token = '';
+      //登录时创建了"大厅"这个组，登出时要删掉
+      state.groupLists= [];
+      state.currentGroupId = '';
       sessionStorage.removeItem("token");
     },
     // SOCKET_CONNECT: (state, status) => {

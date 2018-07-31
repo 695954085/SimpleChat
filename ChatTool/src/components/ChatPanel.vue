@@ -269,6 +269,7 @@ export default {
               this.$router.push({
                 path: "/" + this.$store.state.currentGroupId
               });
+              //设置登录状态为true并关闭登录框
               this.$store.state.loginState = true;
               this.dialogVisible = false;
             }
@@ -397,16 +398,6 @@ $send-button-color: $theme-color;
           background-image: url(../assets/chatTool/sendfile.png);
         }
       }
-      a:nth-child(3) {
-        i {
-          background-image: url(../assets/chatTool/video.png);
-        }
-      }
-      a:nth-child(4) {
-        i {
-          background-image: url(../assets/chatTool/location.png);
-        }
-      }
     }
     .chat-footer-send {
       background-color: transparent;
@@ -456,7 +447,9 @@ $send-button-color: $theme-color;
     background-color: transparent;
     padding-left: 1rem;
     border: none;
-    color:$font-color;
+    font-size: 1.4rem;
+    font-family: "Avenir", Helvetica, Arial, sans-serif;
+    color: $font-color;
   }
 }
 
