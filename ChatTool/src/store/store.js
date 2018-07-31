@@ -8,13 +8,15 @@ const store = new Vuex.Store({
   state: {
     userId: '',
     userName: 'MrDefault',
-    currentGroupName: '所有用户',
-    currentGroupId: '',
+    currentGroupName: '群聊大厅',//所有用户
+    currentGroupId: '',//all_public_connect默认路由跳转进大厅
     currentGroupMumber: [{
       id: "defult",
       name: "default"
     }],
     token: '',
+    loginState: false,
+    groupLists:[],
     // connect: false,
     // message: null
   },

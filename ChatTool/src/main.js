@@ -15,13 +15,12 @@ import VueSocketio from 'vue-socket.io'
 //import socketio from 'socket.io-client'
 
 import ElementUI from 'element-ui'
-//import 'element-ui/lib/theme-chalk/index.css';
-import './assets/theme/theme-green/index.css'
+import './assets/theme/theme-default/index.css'
+import './assets/theme/font/iconfont.css'
 
 Vue.config.productionTip = false;
 
 Vue.use(VueSocketio, '127.0.0.1:3000');
-//Vue.use(VueSocketio, socketio('127.0.0.1:3000'));
 //Vue.use(VueSocketio, socketio('127.0.0.1:3000'), store);
 
 Vue.use(ElementUI);

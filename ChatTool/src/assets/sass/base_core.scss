@@ -1,0 +1,20 @@
+$theme-color-heavry: rgba(142, 209, 252, 1);
+$theme-color: rgba(142, 209, 252, 0.5);
+$theme-color-light: rgba(142, 209, 252, 0.3);
+$font-color: #333;
+
+@mixin sendButtonStyle($colorcolr, $rightPosition) {
+  margin-right: $rightPosition;
+  padding: 2px 12px;
+  border-radius: 12px;
+  background-color: $colorcolr;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  &:hover {
+    opacity: 0.8;
+  }
+  &:focus{
+    outline: none;
+  }
+}

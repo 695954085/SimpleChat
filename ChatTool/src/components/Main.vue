@@ -16,7 +16,6 @@
         <el-form-item prop="checkPass">
           <el-input type="password" v-model="loginForm.checkPass" auto-complete="off" placeholder="password"></el-input>
         </el-form-item>
-        <!-- <el-checkbox checked class="remember">记住密码</el-checkbox> -->
         <el-form-item style="width:100%;">
           <el-button type="primary" style="width:100%;" @click="signIn">Sign in</el-button>
         </el-form-item>
@@ -61,7 +60,6 @@ export default {
         checkPass: '',
         email: ''
       },
-      id: ''
     }
   },
   methods: {
@@ -85,7 +83,8 @@ export default {
           this.$store.commit('set_token', res.data.token);
 
           if (this.$store.state.token) {
-            this.$router.push({ path: '/chat' });
+            //this.$router.push({ path: '/chat' });
+             this.$router.push({ path: "/chat/" + this.state.$store.groupId });
             console.log(this.$store.state.token);
           } else {
             this.dialogVisible2 = true;

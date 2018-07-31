@@ -5,6 +5,8 @@ import ChatPanel from '@/components/ChatPanel'
 import Container from '@/components/Container'
 import MessageItem from '@/components/MessageItem'
 
+import Main2 from '@/components/imitate/Main2'
+
 // import Vuex from 'vuex'
 // import store from './../store/store'
 
@@ -20,7 +22,13 @@ Vue.use(Router)
 const router = new Router({
   routes: [{
       path: '/',
-      component: Main
+      component: Main2,
+      children: [{
+        path: '/*',
+        component: ChatPanel,
+        name: '',
+        hidden: false
+      }, ]
     },
     {
       path: '/login',
@@ -57,6 +65,17 @@ const router = new Router({
       component: MessageItem,
       name: '',
       hidden: true,
+    },
+    {
+      path: '/testMain2',
+      component: Main2,
+      hidden: true,
+      children: [{
+        path: '/testMain2/*',
+        component: ChatPanel,
+        name: '',
+        hidden: true
+      }, ]
     },
   ]
 });

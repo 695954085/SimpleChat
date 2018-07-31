@@ -1,9 +1,10 @@
 <template>
   <div class="chatpanel">
     <div class="chat-content-window">
-      <div class="chat-window-header">
-        <div clas="chat-content-window-name">{{owner}}</div>
-        <el-popover placement="left" width="200" trigger="click">
+      <div class="chat-window-header" v-show="loginState">
+        <h2 clas="chat-content-window-name">{{owner}}</h2>
+        <i class="el-icon-menu" @click.stop="togglePanel"></i>
+        <!-- <el-popover placement="left" width="200" trigger="click">
           <h3>群聊成员</h3>
           <el-menu class="group-list">
             <el-menu-item :key="mumberItem.id" :index="'mumberItem_'+index" v-for="(mumberItem,index) in groupMumbers">
@@ -11,13 +12,13 @@
             </el-menu-item>
           </el-menu>
           <i class="el-icon-more" slot="reference"></i>
-        </el-popover>
+        </el-popover> -->
       </div>
       <div class="chat-window-body">
         <MessageItem :time="messageList.time" :sourceName="messageList.sourceName" :sendContent="messageList.value" :direction="messageList.direction" :key="messageList.id" :index="'messageList_'+index" v-for="(messageList,index) in messageLists">
         </MessageItem>
       </div>
-      <div class="chat-window-footer">
+      <div class="chat-window-footer" v-show = "loginState">
         <div class="chat-footer-toolBar">
           <a class="chatTool-emotion" title="表情">
             <i></i>
@@ -29,12 +30,66 @@
           </a>
         </div>
         <div class="chat-footer-editor">
-          <el-input type="textarea" placeholder="请输入内容" v-model="textarea"></el-input>
+          <!-- <el-input type="textarea" placeholder="请输入内容" v-model="textarea"></el-input> -->
+        <textarea placeholder="" v-model="textarea"></textarea>
         </div>
         <div class="chat-footer-send">
           <button class="chat-endContact" style="display:none;">结束会话</button>
           <button class="chat-sendBtn" @click="sendMessage">发送(S)</button>
         </div>
+      </div>
+      <div class="chat-window-footer-byvisitor" v-show ="!loginState">
+        <p>游客朋友你好，请<b @click="dialogVisible = true">登录</b>后参与聊天</p>
+        <el-dialog
+          :visible.sync="dialogVisible"
+          width="30%">
+          <el-tabs v-model="activeName"  @tab-click="handleTabClick">
+            <el-tab-pane label="登录" name="chat-signIn">登录</el-tab-pane>
+            <el-tab-pane label="注册" name="chat-signUp"> 注册</el-tab-pane>
+          </el-tabs>
+          <el-form :model="loginForm" class="demo-ruleForm login-container" v-show="loginFormShow">
+            <el-form-item prop="account">
+              <el-input type="text" v-model="loginForm.account" auto-complete="off" placeholder="Username"></el-input>
+            </el-form-item>
+            <el-form-item prop="checkPass">
+              <el-input type="password" v-model="loginForm.checkPass" auto-complete="off" placeholder="password"></el-input>
+            </el-form-item>
+            <el-form-item style="width:100%;">
+              <el-button type="primary" style="width:100%;" @click="signIn">Sign in</el-button>
+            </el-form-item>
+          </el-form>
+          <el-form :model="registerForm" class="demo-ruleForm register-container" v-show="!loginFormShow">
+            <el-form-item prop="account">
+              <el-input type="text" v-model="registerForm.account" auto-complete="off" placeholder="Pick a username"></el-input>
+            </el-form-item>
+            <el-form-item prop="email">
+              <el-input type="text" v-model="registerForm.email" auto-complete="off" placeholder="email-adress"></el-input>
+            </el-form-item>
+            <el-form-item prop="checkPass">
+              <el-input type="password" v-model="registerForm.checkPass" auto-complete="off" placeholder="Create a password"></el-input>
+            </el-form-item>
+            <el-form-item style="width:100%;">
+              <el-button type="primary" style="width:100%;" @click="signUp">Sign up for simplechat</el-button>
+            </el-form-item>
+          </el-form>
+        </el-dialog>
+      </div>
+      <div class="chat-float-panel" v-show = "showOnline" ref="main">
+          <p>群组信息</p>
+          <div>
+              <div class="avatar" style="display: none;">
+                  <p>群头像</p>
+                  <img src="//cdn.suisuijiang.com/fiora/./avatar/13.jpg">
+              </div>
+              <div class="feature" style="display: block;">
+                  <p>功能</p>
+                  <button class="component-button danger">退出群组</button>
+              </div>
+              <div class="online-members">
+                  <p>在线成员</p>
+                  <ul class="online-members-list"></ul>
+              </div>
+          </div>
       </div>
     </div>
   </div>
@@ -52,7 +107,20 @@ export default {
   data() {
     return {
       textarea: "",
-      messageLists: []
+      messageLists: [],
+      dialogVisible: false,
+      loginForm: {
+        account: "",
+        checkPass: ""
+      },
+      registerForm: {
+        account: "",
+        checkPass: "",
+        email: ""
+      },
+      loginFormShow: true,
+      activeName: "chat-signIn",
+      showOnline: false
       // messageLists:
       // [
       //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "value": "testmessage1", "direction": "left" },
@@ -65,9 +133,8 @@ export default {
       console.log("socket connected");
     },
     disconnect: function(val) {
-
       console.log(val);
-      //清理数据，，路由智慧登录
+      //清理数据，，路由置回登录
     },
     error: function(val) {
       console.log(val);
@@ -88,16 +155,15 @@ export default {
   },
   methods: {
     sendMessage() {
-      // this.messageLists.push({ "time": "20180531", "sourceName": this.$store.state.userName, "value": this.textarea, "direction": "right" });
-
       // $socket is socket.io-client instance
       if (this.textarea != "") {
         let chatmessage = {
           time: this.getNowFormatDate(),
           value: this.textarea,
-          sourceName: this.$store.state.userName
+          sourceName: this.$store.state.userName,
+          sid: this.$socket.id
         };
-        if (this.$store.state.currentGroupName === "所有用户") {
+        if (this.$store.state.currentGroupId === "all_public_connect") {
           chatmessage.type = "hallMessage";
         } else {
           chatmessage.type = "roomMessage";
@@ -110,7 +176,7 @@ export default {
             chatmessage.direction = "right";
             this.messageLists.push(chatmessage);
           }
-          if(data.error===0){
+          if (data.error === 0) {
             console.error(data.message);
           }
         });
@@ -141,6 +207,104 @@ export default {
         seperator2 +
         date.getSeconds();
       return currentdate;
+    },
+    handleTabClick(tab, event) {
+      if (tab.name === "chat-signIn") {
+        this.loginFormShow = true;
+      }
+      if (tab.name === "chat-signUp") {
+        this.loginFormShow = false;
+      }
+    },
+    togglePanel() {
+      this.showOnline ? this.hide() : this.show();
+    },
+    show() {
+      this.showOnline = true;
+      document.addEventListener("click", this.hidePanel, false);
+    },
+
+    hide() {
+      this.showOnline = false;
+      document.removeEventListener("click", this.hidePanel, false);
+    },
+
+    hidePanel(e) {
+      if (!this.$refs.main.contains(e.target)) {
+        this.hide();
+      }
+    },
+
+    //登录
+    signIn() {
+      //alert("signIn");
+      var params = new URLSearchParams();
+      params.append("username", this.loginForm.account);
+      params.append("password", this.loginForm.checkPass);
+      params.append("sid", this.$socket.id);
+      this.$http({
+        url: `http://127.0.0.1:3000/v1/login`,
+        method: "post",
+        data: params
+      })
+        .then(res => {
+          if (res.status === 200) {
+            console.log(res);
+            this.$store.state.userName = this.loginForm.account;
+            this.$store.state.userid = res.data.id;
+            //this.$store.state.token = res.data.token;
+            this.$store.commit("set_token", res.data.token);
+
+            if (this.$store.state.token) {
+              //成功登录
+              //this.$router.push({ path: '/chat' });
+              console.log(this.$store.state.token);
+              this.$store.state.groupLists.push({
+                id: "all_public_connect",
+                name: "群聊大厅"
+              });
+              //选中当前联系人
+              this.$store.state.currentGroupId = "all_public_connect";
+
+              this.$router.push({
+                path: "/" + this.$store.state.currentGroupId
+              });
+              this.$store.state.loginState = true;
+              this.dialogVisible = false;
+            }
+          }
+          if (res.status === 400) {
+            console.log(res);
+          }
+        })
+        .catch(res => {
+          console.log("登录错误: ", res);
+          alert("登录错误，，请重新检查账号和密码！！");
+        });
+    },
+    //注册
+    signUp() {
+      var params = new URLSearchParams();
+      params.append("username", this.registerForm.account);
+      params.append("email", this.registerForm.email);
+      params.append("password", this.registerForm.checkPass);
+      console.log(params);
+      this.$http({
+        url: `http://127.0.0.1:3000/v1/user`,
+        method: "post",
+        data: params
+      })
+        .then(res => {
+          console.log(res);
+          if (res.status === 200) {
+            //返回一个用户id标记一个唯一的用户(res.data.id)
+            this.$store.state.userid = res.data.id;
+            alert("注册成功");
+          }
+        })
+        .catch(res => {
+          console.log("注册错误: ", res);
+        });
     }
   },
   computed: {
@@ -149,12 +313,11 @@ export default {
     },
     groupMumbers() {
       return this.$store.state.currentGroupMumber;
+    },
+    loginState() {
+      return this.$store.state.loginState;
     }
-  },
-  mounted() {
-    this.$socket.emit("connect", "是从这开始连接吗?"); //在这里触发connect事件
-  },
-  watch: {}
+  }
 };
 </script>
 
@@ -165,32 +328,44 @@ export default {
   position: relative;
 }
 
-/*聊天窗口样式 begin*/
+.el-tabs {
+  .el-tabs__nav {
+    float: none;
+    .el-tabs__item {
+      width: 50%;
+    }
+  }
+}
 
-$color-green: #1aad19;
-$font-color: #333;
-$send-button-color: #f57623;
+/*聊天窗口样式 begin*/
+$send-button-color: $theme-color;
+
 .chat-content-window {
   font-size: 0.8rem;
   letter-spacing: 0;
   .chat-window-header {
     display: flex;
     justify-content: space-between;
-    padding: 10px 20px;
+    padding: 14px 20px;
     border-bottom: 1px solid #d3d3d3;
     .chat-content-window-name {
       font: 1rem bold;
       text-indent: 1rem;
+    }
+    .el-icon-menu {
+      color: $theme-color-heavry;
+      font-size: 1.6rem;
+      cursor: pointer;
     }
   }
   .chat-window-footer {
     position: absolute;
     bottom: 0;
     width: 100%;
+    background-color: hsla(0, 0%, 100%, 0.5);
     .chat-footer-toolBar {
       height: 24px;
       line-height: 24px;
-      background-color: #fff;
       text-align: left;
       a {
         color: #333;
@@ -233,30 +408,8 @@ $send-button-color: #f57623;
         }
       }
     }
-    .chat-footer-editor {
-      background: #fff;
-      textarea {
-        resize: none;
-        width: 100%;
-        background-color: #fff;
-        border: none;
-        outline: none;
-        height: 80px;
-      }
-    }
-    @mixin sendButtonStyle($colorcolr, $rightPosition) {
-      margin-right: $rightPosition;
-      padding: 4px 12px;
-      border-radius: 12px;
-      background-color: $colorcolr;
-      color: #fff;
-      border: none;
-      &:hover {
-        opacity: 0.8;
-      }
-    }
     .chat-footer-send {
-      background-color: #fff;
+      background-color: transparent;
       height: 40px;
       overflow: hidden;
       display: flex;
@@ -270,7 +423,53 @@ $send-button-color: #f57623;
       }
     }
   }
+  .chat-window-footer-byvisitor {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: hsla(0, 0%, 100%, 0.5);
+    height: 144px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    p {
+      letter-spacing: 1px;
+      font-size: 1rem;
+      user-select: none;
+      b {
+        color: $theme-color-heavry;
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+    }
+  }
+}
+/*聊天窗口样式 end*/
+
+.chat-footer-editor {
+  height: 80px;
+  textarea {
+    resize: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    padding-left: 1rem;
+    border: none;
+    color:$font-color;
+  }
 }
 
-/*聊天窗口样式 end*/
+/*右侧组群成员列表 start*/
+.chat-float-panel {
+  transform: translateX(0);
+  height: 100%;
+  width: 300px;
+  position: absolute;
+  right: 0;
+  background-color: hsla(0, 0%, 98%, 0.95);
+  flex-direction: column;
+  transition: transform 0.5s;
+}
+/*右侧组群成员列表 end*/
 </style>
