@@ -6,14 +6,14 @@
    :groupIndex="index"
    :class="{ 'linkman-select': index === selected }"
    @click="groupClick(index)">
-      <img class="component-avatar " src="../../assets/defaultAvatar.jpg">
+      <img class="component-avatar " src="../assets/defaultAvatar.jpg">
       <div class="top-bottom">
           <div class="name-time">
               <p class="name">{{groupItem.name}}</p>
-              <p class="time">09:30</p>
+              <p class="time">{{groupItem.message.time}}</p>
           </div>
           <div class="preview-unread">
-              <p class="preview">newming: #(乖)</p>
+              <p class="preview">{{groupItem.message.value}}</p>
           </div>
       </div>
   </div>
@@ -54,7 +54,6 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-
 //联系人列表(LinkMan)
 .chatPanel-linkman-group {
   -ms-flex: 1;

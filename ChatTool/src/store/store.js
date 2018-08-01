@@ -4,21 +4,18 @@ import Vuex from 'vuex'
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
-  // 定义状态
   state: {
     userId: '',
     userName: 'MrDefault',
-    currentGroupName: '群聊大厅',//所有用户
+    token: '',
+    groupLists:[],//用户的组群信息(包括name,id,mumber,onlineMumber?，最新的message)
+    currentGroupName: '群聊大厅',//群聊大厅默认群名
     currentGroupId: '',//all_public_connect默认路由跳转进大厅
     currentGroupMumber: [{
       id: "defult",
       name: "default"
     }],
-    token: '',
     loginState: false,
-    groupLists:[],
-    // connect: false,
-    // message: null
   },
   //修改多个state用mutations,触发方法($store.commit('set_token'))
   mutations: {
@@ -34,12 +31,6 @@ const store = new Vuex.Store({
       state.currentGroupId = '';
       sessionStorage.removeItem("token");
     },
-    // SOCKET_CONNECT: (state, status) => {
-    //   state.connect = true;
-    // },
-    // SOCKET_USER_MESSAGE: (state, message) => {
-    //   state.message = message;
-    // }
   },
   //修改多个mutations用actions,触发方法($store.dispatch('handle_token'))
   actions: {

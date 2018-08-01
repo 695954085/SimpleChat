@@ -1,154 +1,298 @@
 <template>
-  <div class="main">
-    <el-row>
-      <el-col :offset="18" :span="1">
-        <el-button type="primary" @click="dialogVisible1 = true">SignIn</el-button>
-      </el-col>
-      <el-col :offset="1" :span="1">
-        <el-button type="primary" @click="dialogVisible2 = true">SignUp</el-button>
-      </el-col>
-    </el-row>
-    <el-dialog title="系统登录" :visible.sync="dialogVisible1">
-      <el-form :model="loginForm" class="demo-ruleForm login-container">
-        <el-form-item prop="account">
-          <el-input type="text" v-model="loginForm.account" auto-complete="off" placeholder="Username"></el-input>
-        </el-form-item>
-        <el-form-item prop="checkPass">
-          <el-input type="password" v-model="loginForm.checkPass" auto-complete="off" placeholder="password"></el-input>
-        </el-form-item>
-        <el-form-item style="width:100%;">
-          <el-button type="primary" style="width:100%;" @click="signIn">Sign in</el-button>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
-    <el-dialog title="用户注册" :visible.sync="dialogVisible2">
-      <el-form :model="registerForm" class="demo-ruleForm register-container">
-        <el-form-item prop="account">
-          <label class="input-label">Username</label>
-          <el-input type="text" v-model="registerForm.account" auto-complete="off" placeholder="Pick a username"></el-input>
-        </el-form-item>
-        <el-form-item prop="email">
-          <label class="input-label">Email</label>
-          <el-input type="text" v-model="registerForm.email" auto-complete="off" placeholder="you@example.com"></el-input>
-        </el-form-item>
-        <el-form-item prop="checkPass">
-          <label class="input-label">password</label>
-          <el-input type="password" v-model="registerForm.checkPass" auto-complete="off" placeholder="Create a password"></el-input>
-        </el-form-item>
-        <el-form-item style="width:100%;">
-          <el-button type="primary" style="width:100%;" @click="signUp">Sign up for simplechat</el-button>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
-
+<div class="chat-main" @click="showOnline = false">
+  <div class="chat-container">
+    <div class="chat-container-left" v-show="loginState">
+      <img class="chat-component-avatar" src="../assets/defaultAvatar.jpg" @click="setAvatar = true">
+      <ButtonList></ButtonList>
+      <el-dialog
+        title="个人信息设置"
+        :visible.sync="setAvatar"
+        width="30%">
+        <div class="chat-welcome-userName">你好,{{$store.state.userName}}</div>
+        <el-upload
+          class="avatar-uploader"
+          action="http://127.0.0.1:3000/v1/avatar"
+          :show-file-list="false"
+          :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload">
+          <img v-if="imageUrl" :src="imageUrl" class="avatar">
+          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+        </el-upload>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="setAvatar = false">取 消</el-button>
+          <el-button type="primary" @click="setAvatar = false">确 定</el-button>
+        </span>
+      </el-dialog>
+    </div>
+    <div class="chat-container-right">
+      <div class="chat-container-feature" v-show="loginState">
+        <div class="chat-container-search">
+          <input class="chat-search-text" type="text" placeholder="搜索群组/用户(待实现)" autocomplete="false">
+          <div class="chat-container-search-plus">
+            <i class="el-icon-circle-plus" @click="circlePlus = true"></i>
+          </div>
+        </div>
+        <el-dialog
+          title="创建群组"
+          :visible.sync="circlePlus"
+          width="30%">
+          <el-input v-model="groupnameInput" placeholder="输入一个好听的群名吧~~"></el-input>
+          <div class="chat-module-groupcreate">
+            <el-button @click="createGroup">创建</el-button>
+          </div>
+        </el-dialog>
+        <LinkMan :groupLists = "groupLists" :activeId="activeId"></LinkMan>
+      </div>
+      <div class="chat-container-chatpanel">
+          <transition name="fade" mode="out-in">
+            <router-view/>
+          </transition>
+      </div>
+    </div>
   </div>
+</div>
 </template>
-
 <script>
+
+import ButtonList from "@/components/ButtonList";
+import LinkMan from "@/components/LinkMan";
+
 export default {
-  name: 'Main',
+  name: "Main2",
+  components: {
+    ButtonList: ButtonList,
+    LinkMan: LinkMan
+  },
   data() {
     return {
-      dialogVisible1: false,
-      dialogVisible2: false,
       loginForm: {
-        account: '',
-        checkPass: ''
+        account: "",
+        checkPass: ""
       },
       registerForm: {
-        account: '',
-        checkPass: '',
-        email: ''
+        account: "",
+        checkPass: "",
+        email: ""
       },
-    }
+      setAvatar: false,
+      circlePlus: false,
+      groupnameInput: "",
+      imageUrl: ""
+    };
   },
   methods: {
-    //登录
-    signIn() {
-      //alert("signIn");
-      var params = new URLSearchParams();
-      params.append('username', this.loginForm.account);
-      params.append('password', this.loginForm.checkPass);
-      params.append('sid', this.$socket.id);
-      this.$http({
-        url: `http://127.0.0.1:3000/v1/login`,
-        method: 'post',
-        data: params,
-      }).then((res) => {
-        if (res.status === 200) {
-          console.log(res);
-          this.$store.state.userName = this.loginForm.account;
-          this.$store.state.userid = res.data.id;
-          //this.$store.state.token = res.data.token;
-          this.$store.commit('set_token', res.data.token);
+    userName() {
+      return this.$store.state.userName;
+    },
+    createGroup() {
+      if (this.groupNameInput != undefined) {
+        //随机生成一个串，，然后查库比对是否不存在，作为唯一的串赖标记一个群聊的id
+        let groupId = Math.random()
+          .toString(36)
+          .substr(2);
+        //创建房间
+        this.$socket.emit("createRoom", groupId, data => {
+          console.log("xxx");
+        });
+        this.groupLists.push({
+          id: groupId,
+          name: this.groupNameInput,
+          mumber: selectMumber
+        });
+      }
+    },
+    createRoom() {
+      //测试一下创建房间(this.$socket.id)
+    },
+    queryMumber(groupId) {
+      //应该是要emit一个客户端
+      if (groupId === "all_public_connect") {
+        return [
+          { id: "aaa", name: "aaa" },
+          { id: "bbb", name: "bbb" },
+          { id: "ccc", name: "ccc" }
+        ];
+      }
+      if (groupId === "room_1") {
+        return [{ id: this.$store.state.userId, name: userName }];
+      }
+      return null;
+    },
+    handleAvatarSuccess(res, file) {
+      this.imageUrl = URL.createObjectURL(file.raw);
+    },
+    beforeAvatarUpload(file) {
+      const isJPG = file.type === "image/jpeg";
+      const isLt2M = file.size / 1024 / 1024 < 2;
 
-          if (this.$store.state.token) {
-            //this.$router.push({ path: '/chat' });
-             this.$router.push({ path: "/chat/" + this.state.$store.groupId });
-            console.log(this.$store.state.token);
-          } else {
-            this.dialogVisible2 = true;
-            this.dialogVisible1 = false;
+      if (!isJPG) {
+        this.$message.error("上传头像图片只能是 JPG 格式!");
+      }
+      if (!isLt2M) {
+        this.$message.error("上传头像图片大小不能超过 2MB!");
+      }
+      return isJPG && isLt2M;
+    }
+  },
+  mounted() {
+    //测试画面开启
+    this.$store.state.loginState = true;
+  },
+  computed: {
+    loginState() {
+      return this.$store.state.loginState;
+    },
+    groupLists() {
+      return this.$store.state.groupLists;
+    },
+    activeId() {
+      return this.$store.state.currentGroupId;
+    }
+  }
+};
+</script>
+<style lang="scss" scoped>
+.chat-main {
+  width: 100%;
+  height: 100%;
+  background-image: url(../assets/bg.jpg);
+}
+.chat-container {
+  width: 70%;
+  position: absolute;
+  left: 15%;
+  height: 85%;
+  top: 7.5%;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  display: flex;
+  border-radius: 10px;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+  .chat-container-left {
+    width: 80px;
+    background-color: $theme-color;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -ms-flex-align: center;
+    align-items: center;
+    position: relative;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    .chat-component-avatar {
+      margin-top: 50px;
+      width: 60px;
+      height: 60px;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    .chat-container-buttonList {
+      position: absolute;
+      bottom: 40px;
+      display: -ms-flexbox;
+      display: flex;
+      -ms-flex-direction: column;
+      flex-direction: column;
+      -ms-flex-align: center;
+      align-items: center;
+    }
+  }
+  .chat-container-right {
+    display: flex;
+    flex: 1;
+    .chat-container-feature {
+      width: 300px;
+      height: 100%;
+      position: relative;
+      display: flex;
+      -ms-flex-direction: column;
+      flex-direction: column;
+      background-color: $theme-color-light;
+      .chat-container-search {
+        display: flex;
+        height: 70px;
+        -ms-flex-align: center;
+        align-items: center;
+        padding: 0 12px;
+        position: relative;
+        //文本框样式
+        .chat-search-text {
+          -ms-flex: 1;
+          flex: 1;
+          height: 36px;
+          border-radius: 18px;
+          border: none;
+          background-color: hsla(0, 0%, 100%, 0.5);
+          padding-left: 35px;
+          padding-right: 15px;
+          padding-top: 2px;
+          font-size: 14px;
+          color: #333;
+          outline: none;
+        }
+        //加号按钮
+        .chat-container-search-plus {
+          width: 40px;
+          height: 40px;
+          margin-left: 5px;
+          .el-icon-circle-plus {
+            font-size: 38px;
+            line-height: 40px;
+            color: hsla(0, 0%, 100%, 0.5);
+            cursor: pointer;
           }
         }
-        if (res.status === 400) {
-          console.log(res);
-        }
-      }).catch((res) => {
-        console.log('登录错误: ', res);
-        alert("登录错误，，请重新检查账号和密码！！");
-      });
-    },
-    //注册
-    signUp() {
-      var params = new URLSearchParams();
-      params.append('username', this.registerForm.account);
-      params.append('email', this.registerForm.email);
-      params.append('password', this.registerForm.checkPass);
-      console.log(params);
-      this.$http({
-        url: `http://127.0.0.1:3000/v1/user`,
-        method: 'post',
-        data: params
-      }).then((res) => {
-        console.log(res);
-        if (res.status === 200) {
-          //返回一个用户id标记一个唯一的用户(res.data.id)
-          this.$store.state.userid = res.data.id;
-          alert("注册成功");
-          this.dialogVisible1 = true;
-          this.dialogVisible2 = false;
-        }
-      }).catch((res) => {
-        console.log('注册错误: ', res);
-      });
-    },
-  },
-  ready: function() {
-    console.log('isLogin: ' + this.$route.params.isLogin);
-    if (this.$route.params.isLogin) {
-      this.dialogVisible2 = true;
-      this.dialogVisible1 = false;
+      }
+    }
+    .chat-container-chatpanel {
+      display: flex;
+      -ms-flex-direction: column;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+      flex: 1;
+      flex-direction: column;
+      background-color: hsla(0, 0%, 95%, 0.6);
+      overflow: hidden;
+      position: relative;
     }
   }
 }
-</script>
+</style>
 
-<style lang="scss" scoped>
-.login-container {
-  width: 350px;
-  padding: 35px 35px 15px 35px;
-  .remember {
-    margin: 0px 0px 35px 0px;
-  }
+<style lang="scss">
+/*图片上传 start*/
+.chat-welcome-userName {
+  margin: 20px 0;
+}
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader .el-upload:hover {
+  border-color: #409eff;
 }
 
-.register-container {
-  width: 350px;
-  padding: 35px 35px 15px 35px;
-  .input-label {
-    float: left;
-    font-size: .8rem;
-  }
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
 }
+.avatar {
+  width: 100px;
+  height: 100px;
+  display: block;
+}
+.chat-module-groupcreate {
+  padding-top: 20px;
+  display: flex;
+  justify-content:flex-end;
+}
+/*图片上传 end*/
 </style>

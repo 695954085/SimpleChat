@@ -2,6 +2,104 @@ $theme-color-heavry: rgba(142, 209, 252, 1);
 $theme-color: rgba(142, 209, 252, 0.5);
 $theme-color-light: rgba(142, 209, 252, 0.3);
 $font-color: #333;
+$messageItem-color: $theme-color-light;
+$messageItem-font-color: $font-color;
+
+@mixin chatTool-message-triangle {
+  color: $messageItem-font-color;
+  word-break: break-all;
+  margin-bottom: 5px;
+  padding: 5px 10px;
+  border: 1px solid $messageItem-color;
+  background-color: $messageItem-color;
+  border-radius: 5px;
+
+}
+
+@mixin messagequeue($direction) {
+  padding: 0 30px 10px 30px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+
+  @if $direction=="left" {
+    justify-content: flex-start;
+    .chatTool-message-article-left {
+      @include chatTool-message-triangle;
+    }
+    .chatTool-message-triangle-left {
+      display: block;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      line-height: 0;
+      font-size: 0;
+      border-bottom: 8px solid transparent;
+      border-top: 8px solid transparent;
+      border-left: none;
+      border-right: 8px solid $messageItem-color;
+    }
+  }
+  @if $direction=="right" {
+    justify-content: flex-end;
+    .chatTool-message-article-right {
+      @include chatTool-message-triangle;
+    }
+    .chatTool-message-triangle-right {
+      display: block;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      line-height: 0;
+      font-size: 0;
+      border-bottom: 8px solid transparent;
+      border-top: 8px solid transparent;
+      border-right: none;
+      border-left: 8px solid $messageItem-color;
+    }
+  }
+  /*失败图标*/
+  .chatTool-message-sign-fail {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    color: #ED4A4B;
+    font-size: 1rem;
+  }
+  /*消息发送图片*/
+  .chatTool-message-list-img {
+    width: 80px;
+    height: 100px;
+  }
+  /*在输入框里的文件状态*/
+  .chatTool-message-locationName {
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 5px;
+  }
+  /*file类型的消息*/
+  .chatTool-message-fileBox {
+    width: 220px;
+    height: 60px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border: 1px solid #999;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    .chatTool-message-fileIcon {
+      font-size: 3rem;
+      color: $theme-color;
+    }
+    .chatTool-message-fileName {
+      font-size: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      max-width: 160px;
+      text-overflow: ellipsis;
+    }
+  }
+}
 
 @mixin sendButtonStyle($colorcolr, $rightPosition) {
   margin-right: $rightPosition;
@@ -14,7 +112,12 @@ $font-color: #333;
   &:hover {
     opacity: 0.8;
   }
-  &:focus{
+  &:focus {
     outline: none;
   }
+}
+
+@mixin chatPanelTitleStyle {
+  text-align: left;
+  padding: 10px; // font-weight: 700;
 }

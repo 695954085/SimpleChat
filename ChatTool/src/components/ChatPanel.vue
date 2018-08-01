@@ -2,20 +2,17 @@
   <div class="chatpanel">
     <div class="chat-content-window">
       <div class="chat-window-header" v-show="loginState">
-        <h2 clas="chat-content-window-name">{{owner}}</h2>
+        <h2 clas="chat-content-window-name">{{$store.state.currentGroupName}}</h2>
         <i class="el-icon-menu" @click.stop="togglePanel"></i>
-        <!-- <el-popover placement="left" width="200" trigger="click">
-          <h3>群聊成员</h3>
-          <el-menu class="group-list">
-            <el-menu-item :key="mumberItem.id" :index="'mumberItem_'+index" v-for="(mumberItem,index) in groupMumbers">
-              <span>{{mumberItem.name}}</span>
-            </el-menu-item>
-          </el-menu>
-          <i class="el-icon-more" slot="reference"></i>
-        </el-popover> -->
       </div>
       <div class="chat-window-body">
-        <MessageItem :time="messageList.time" :sourceName="messageList.sourceName" :sendContent="messageList.value" :direction="messageList.direction" :key="messageList.id" :index="'messageList_'+index" v-for="(messageList,index) in messageLists">
+        <MessageItem :time="messageList.time"
+        :sourceName="messageList.sourceName"
+        :sendContent="messageList.value"
+        :direction="messageList.direction"
+        :key="messageList.id"
+        :index="'messageList_'+index"
+        v-for="(messageList,index) in messageLists">
         </MessageItem>
       </div>
       <div class="chat-window-footer" v-show = "loginState">
@@ -30,7 +27,6 @@
           </a>
         </div>
         <div class="chat-footer-editor">
-          <!-- <el-input type="textarea" placeholder="请输入内容" v-model="textarea"></el-input> -->
         <textarea placeholder="" v-model="textarea"></textarea>
         </div>
         <div class="chat-footer-send">
@@ -74,35 +70,19 @@
           </el-form>
         </el-dialog>
       </div>
-      <div class="chat-float-panel" v-show = "showOnline" ref="main">
-          <p>群组信息</p>
-          <div>
-              <div class="avatar" style="display: none;">
-                  <p>群头像</p>
-                  <img src="//cdn.suisuijiang.com/fiora/./avatar/13.jpg">
-              </div>
-              <div class="feature" style="display: block;">
-                  <p>功能</p>
-                  <button class="component-button danger">退出群组</button>
-              </div>
-              <div class="online-members">
-                  <p>在线成员</p>
-                  <ul class="online-members-list"></ul>
-              </div>
-          </div>
-      </div>
     </div>
+    <FloatPanel v-show = "showOnline" ref="main" :mumberLists = "groupMumbers"></FloatPanel>
   </div>
 </template>
 <script>
-import store from "@/store/store";
-
 import MessageItem from "@/components/MessageItem";
+import FloatPanel from "@/components/FloatPanel";
 
 export default {
   name: "ChatPanel",
   components: {
-    MessageItem: MessageItem
+    MessageItem: MessageItem,
+    FloatPanel: FloatPanel
   },
   data() {
     return {
@@ -120,8 +100,8 @@ export default {
       },
       loginFormShow: true,
       activeName: "chat-signIn",
-      showOnline: false
-      // messageLists:
+      showOnline: false,
+      messageLists:
       // [
       //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "value": "testmessage1", "direction": "left" },
       //   { "id": "message2", "time": "20180601", "sourceName": "yyy", "value": "testmessage2", "direction": "right" }
@@ -134,23 +114,26 @@ export default {
     },
     disconnect: function(val) {
       console.log(val);
-      //清理数据，，路由置回登录
+      //清理数据,,路由置回登录
     },
     error: function(val) {
       console.log(val);
     },
     HallMessage: function(val) {
-      //服务端用广播，，不用预自己
+      //服务端用广播,,不用预自己
       if (val.sourceName === this.$store.state.userName) {
         val.direction = "right";
       } else {
         val.direction = "left";
       }
       this.messageLists.push(val);
+      //更新groupList这个数据集合里的message信息
+      this.groupLists
     },
     RoomAndPrivateMessage: function(val) {
       val.direction = "left";
       this.messageLists.push(val);
+      //更新groupList这个数据集合里的message信息
     }
   },
   methods: {
@@ -230,7 +213,7 @@ export default {
     },
 
     hidePanel(e) {
-      if (!this.$refs.main.contains(e.target)) {
+      if (!this.$refs.main.$el.contains(e.target)) {
         this.hide();
       }
     },
@@ -309,9 +292,6 @@ export default {
     }
   },
   computed: {
-    owner() {
-      return this.$store.state.currentGroupName;
-    },
     groupMumbers() {
       return this.$store.state.currentGroupMumber;
     },
@@ -346,13 +326,11 @@ $send-button-color: $theme-color;
   letter-spacing: 0;
   .chat-window-header {
     display: flex;
+    align-items: center;
+    height: 60px;
     justify-content: space-between;
-    padding: 14px 20px;
+    padding: 0 20px;
     border-bottom: 1px solid #d3d3d3;
-    .chat-content-window-name {
-      font: 1rem bold;
-      text-indent: 1rem;
-    }
     .el-icon-menu {
       color: $theme-color-heavry;
       font-size: 1.6rem;
@@ -369,7 +347,7 @@ $send-button-color: $theme-color;
       line-height: 24px;
       text-align: left;
       a {
-        color: #333;
+        color: $font-color;
         display: inline-block;
         height: 100%;
         line-height: 100%;
@@ -452,17 +430,4 @@ $send-button-color: $theme-color;
     color: $font-color;
   }
 }
-
-/*右侧组群成员列表 start*/
-.chat-float-panel {
-  transform: translateX(0);
-  height: 100%;
-  width: 300px;
-  position: absolute;
-  right: 0;
-  background-color: hsla(0, 0%, 98%, 0.95);
-  flex-direction: column;
-  transition: transform 0.5s;
-}
-/*右侧组群成员列表 end*/
 </style>

@@ -1,11 +1,9 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Main from '@/components/Main'
 import ChatPanel from '@/components/ChatPanel'
-import Container from '@/components/Container'
 import MessageItem from '@/components/MessageItem'
 
-import Main2 from '@/components/imitate/Main2'
+import Main from '@/components/Main'
 
 // import Vuex from 'vuex'
 // import store from './../store/store'
@@ -22,7 +20,7 @@ Vue.use(Router)
 const router = new Router({
   routes: [{
       path: '/',
-      component: Main2,
+      component: Main,
       children: [{
         path: '/*',
         component: ChatPanel,
@@ -31,8 +29,8 @@ const router = new Router({
       }, ]
     },
     {
-      path: '/Main2',
-      component: Main2,
+      path: '/Main',
+      component: Main,
       data: function () {
         return {
           isLogin:true,
@@ -44,21 +42,6 @@ const router = new Router({
       component: ChatPanel,
       name: '',
       hidden: true
-    },
-    {
-      path: '/chat',
-      meta: {
-        requireAuth: true, // 添加该字段，表示进入这个路由是需要登录的
-      },
-      component: Container,
-      name: '',
-      hidden: true,
-      children: [{
-        path: '/chat/*',
-        component: ChatPanel,
-        name: '',
-        hidden: true
-      }, ]
     },
     {
       path: '/messageitem',
