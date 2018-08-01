@@ -12,7 +12,7 @@
         :direction="messageList.direction"
         :key="messageList.id"
         :index="'messageList_'+index"
-        v-for="(messageList,index) in messageLists">
+        v-for="(messageList,index) in $store.state.currentMessageList">
         </MessageItem>
       </div>
       <div class="chat-window-footer" v-show = "loginState">
@@ -87,7 +87,6 @@ export default {
   data() {
     return {
       textarea: "",
-      messageLists: [],
       dialogVisible: false,
       loginForm: {
         account: "",
@@ -100,8 +99,8 @@ export default {
       },
       loginFormShow: true,
       activeName: "chat-signIn",
-      showOnline: false,
-      messageLists:
+      showOnline: false
+      //messageLists:
       // [
       //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "value": "testmessage1", "direction": "left" },
       //   { "id": "message2", "time": "20180601", "sourceName": "yyy", "value": "testmessage2", "direction": "right" }
@@ -126,14 +125,23 @@ export default {
       } else {
         val.direction = "left";
       }
-      this.messageLists.push(val);
+      this.$store.state.currentMessageList.push(val);
       //更新groupList这个数据集合里的message信息
-      this.groupLists
+      this.$store.state.groupLists.forEach((item, index) => {
+        if (item.id === "all_public_connect") {
+          item.freshMessage = val;
+        }
+      });
     },
     RoomAndPrivateMessage: function(val) {
       val.direction = "left";
-      this.messageLists.push(val);
+      $store.state.currentMessageList.push(val);
       //更新groupList这个数据集合里的message信息
+      this.$store.state.groupLists.forEach((item, index) => {
+        if (item.id === val.roomId) {
+          item.freshMessage = val;
+        }
+      });
     }
   },
   methods: {
@@ -157,7 +165,13 @@ export default {
           console.log(data);
           if (data.error === -1) {
             chatmessage.direction = "right";
-            this.messageLists.push(chatmessage);
+            this.$store.state.currentMessageList.push(chatmessage);
+            //更新groupList这个数据集合里的message信息
+            this.$store.state.groupLists.forEach((item, index) => {
+              if (item.id === this.$store.state.currentGroupId) {
+                item.freshMessage = chatmessage;
+              }
+            });
           }
           if (data.error === 0) {
             console.error(data.message);
@@ -240,8 +254,9 @@ export default {
 
             if (this.$store.state.token) {
               //成功登录
-              //this.$router.push({ path: '/chat' });
               console.log(this.$store.state.token);
+
+              //创建一个有所有用户的大厅
               this.$store.state.groupLists.push({
                 id: "all_public_connect",
                 name: "群聊大厅"
@@ -249,9 +264,23 @@ export default {
               //选中当前联系人
               this.$store.state.currentGroupId = "all_public_connect";
 
+              //查询大厅的所有消息回来
+              this.$http({
+                url: `http://127.0.0.1:3000/v2/room/all_public_conect`,
+                method: "get"
+              }).then(res => {
+                if (res.status === 200) {
+                  //更新vuex的值
+                  this.$store.state.currentMessageList = res.data;
+                }
+              });
+
+              //是不是要查询用户的room来push到groupList里...
+
               this.$router.push({
                 path: "/" + this.$store.state.currentGroupId
               });
+
               //设置登录状态为true并关闭登录框
               this.$store.state.loginState = true;
               this.dialogVisible = false;

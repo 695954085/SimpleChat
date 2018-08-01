@@ -10,10 +10,10 @@
       <div class="top-bottom">
           <div class="name-time">
               <p class="name">{{groupItem.name}}</p>
-              <p class="time">{{groupItem.message.time}}</p>
+              <p class="time">{{groupItem.freshmessage.time}}</p>
           </div>
           <div class="preview-unread">
-              <p class="preview">{{groupItem.message.value}}</p>
+              <p class="preview">{{groupItem.freshmessage.value}}</p>
           </div>
       </div>
   </div>
@@ -39,6 +39,15 @@ export default {
       // });
       this.$router.push({ path: "/" + this.groupLists[index].id });
       this.selected = index;
+      //查询房间的消息回来
+      this.$http({
+        url: `http://127.0.0.1:3000/v2/room/`+this.groupItem.id,
+        method: "get"
+      }).then(res => {
+        if (res.status === 200) {
+          this.$store.state.currentMessageList = res.data;
+        }
+      });
     }
   },
   watch: {

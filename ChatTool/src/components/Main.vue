@@ -53,7 +53,6 @@
 </div>
 </template>
 <script>
-
 import ButtonList from "@/components/ButtonList";
 import LinkMan from "@/components/LinkMan";
 
@@ -93,31 +92,17 @@ export default {
         //创建房间
         this.$socket.emit("createRoom", groupId, data => {
           console.log("xxx");
+          this.$store.state.groupLists.push({
+            id: groupId,
+            name: this.groupNameInput,
+            mumber: [
+              { id: this.$store.state.userId, name: this.$store.state.userName }
+            ]
+          });
         });
-        this.groupLists.push({
-          id: groupId,
-          name: this.groupNameInput,
-          mumber: selectMumber
-        });
       }
     },
-    createRoom() {
-      //测试一下创建房间(this.$socket.id)
-    },
-    queryMumber(groupId) {
-      //应该是要emit一个客户端
-      if (groupId === "all_public_connect") {
-        return [
-          { id: "aaa", name: "aaa" },
-          { id: "bbb", name: "bbb" },
-          { id: "ccc", name: "ccc" }
-        ];
-      }
-      if (groupId === "room_1") {
-        return [{ id: this.$store.state.userId, name: userName }];
-      }
-      return null;
-    },
+
     handleAvatarSuccess(res, file) {
       this.imageUrl = URL.createObjectURL(file.raw);
     },
@@ -135,7 +120,7 @@ export default {
     }
   },
   mounted() {
-    //测试画面开启
+    //测试时画面开启
     this.$store.state.loginState = true;
   },
   computed: {
@@ -292,7 +277,7 @@ export default {
 .chat-module-groupcreate {
   padding-top: 20px;
   display: flex;
-  justify-content:flex-end;
+  justify-content: flex-end;
 }
 /*图片上传 end*/
 </style>
