@@ -91,7 +91,6 @@ export default {
           .substr(2);
         //创建房间
         this.$socket.emit("createRoom", groupId, data => {
-          console.log("xxx");
           this.$store.state.groupLists.push({
             id: groupId,
             name: this.groupNameInput,
@@ -120,8 +119,6 @@ export default {
     }
   },
   mounted() {
-    //测试时画面开启
-    this.$store.state.loginState = true;
   },
   computed: {
     loginState() {

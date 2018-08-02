@@ -116,6 +116,23 @@ class Client {
   }
 
   /**
+   * client退出登录
+   */
+  logout(reason) {
+    try {
+      console.log(chalk.red(reason))
+      console.log(chalk.red(`${this.user.username} 退出登录`));
+      this.socket.leaveAll()
+      this.rooms.forEach(roomId => {
+        this._sendOnlineMessage(roomId)
+      })
+      this.user = null
+    } catch (err) {
+      console.log(chalk.red(err))
+    }
+  }
+
+  /**
    * 错误监听器
    * @param {*} error 
    */
@@ -180,23 +197,23 @@ class Client {
   _sendOnlineMessage(roomId) {
     try {
       // 向房间全部人推送在线人数的变化
-      // let onlineSocketIds = Object.keys(this.io.to(roomId).sockets)
-      // let onlineClients = onlineSocketIds.filter(socketId => {
-      //   let client = this.socketDb.getClient(socketId)
-      //   return client.user === null ? false : true
-      // }).map(socketId => {
-      //   let client = this.socketDb.getClient(socketId)
-      //   return {
-      //     sid: socketId,
-      //     username: client.user.username
-      //   }
-      // })
-      let onlineClients = this.socketDb.getRoom(roomId).clients.map(client => {
+      let onlineSocketIds = Object.keys(this.io.to(roomId).sockets)
+      let onlineClients = onlineSocketIds.filter(socketId => {
+        let client = this.socketDb.getClient(socketId)
+        return client.user === null ? false : true
+      }).map(socketId => {
+        let client = this.socketDb.getClient(socketId)
         return {
-          sid: client.socket.id,
+          sid: socketId,
           username: client.user.username
         }
       })
+      // let onlineClients = this.socketDb.getRoom(roomId).clients.map(client => {
+      //   return {
+      //     sid: client.socket.id,
+      //     username: client.user.username
+      //   }
+      // })
       this.io.to(roomId).emit('online', {
         roomId: roomId,
         onlineClients: onlineClients

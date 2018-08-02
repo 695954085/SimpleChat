@@ -2,20 +2,14 @@
   <div class="chatpanel">
     <div class="chat-content-window">
       <div class="chat-window-header" v-show="loginState">
-        <h2 clas="chat-content-window-name">{{$store.state.currentGroupName}}</h2>
+        <h2 clas="chat-content-window-name">{{currentGroupName}}</h2>
         <i class="el-icon-menu" @click.stop="togglePanel"></i>
       </div>
       <div class="chat-window-body">
-        <MessageItem :time="messageList.time"
-        :sourceName="messageList.sourceName"
-        :sendContent="messageList.value"
-        :direction="messageList.direction"
-        :key="messageList.id"
-        :index="'messageList_'+index"
-        v-for="(messageList,index) in $store.state.currentMessageList">
+        <MessageItem :time="messageList.time" :sourceName="messageList.sourceName" :sendContent="messageList.value" :direction="messageList.direction" :key="messageList.id" :index="'messageList_'+index" v-for="(messageList,index) in $store.state.currentMessageList">
         </MessageItem>
       </div>
-      <div class="chat-window-footer" v-show = "loginState">
+      <div class="chat-window-footer" v-show="loginState">
         <div class="chat-footer-toolBar">
           <a class="chatTool-emotion" title="表情">
             <i></i>
@@ -27,19 +21,18 @@
           </a>
         </div>
         <div class="chat-footer-editor">
-        <textarea placeholder="" v-model="textarea"></textarea>
+          <textarea placeholder="" v-model="textarea"></textarea>
         </div>
         <div class="chat-footer-send">
           <button class="chat-endContact" style="display:none;">结束会话</button>
           <button class="chat-sendBtn" @click="sendMessage">发送(S)</button>
         </div>
       </div>
-      <div class="chat-window-footer-byvisitor" v-show ="!loginState">
-        <p>游客朋友你好，请<b @click="dialogVisible = true">登录</b>后参与聊天</p>
-        <el-dialog
-          :visible.sync="dialogVisible"
-          width="30%">
-          <el-tabs v-model="activeName"  @tab-click="handleTabClick">
+      <div class="chat-window-footer-byvisitor" v-show="!loginState">
+        <p>游客朋友你好，请
+          <b @click="dialogVisible = true">登录</b>后参与聊天</p>
+        <el-dialog :visible.sync="dialogVisible" width="30%">
+          <el-tabs v-model="activeName" @tab-click="handleTabClick">
             <el-tab-pane label="登录" name="chat-signIn">登录</el-tab-pane>
             <el-tab-pane label="注册" name="chat-signUp"> 注册</el-tab-pane>
           </el-tabs>
@@ -71,12 +64,14 @@
         </el-dialog>
       </div>
     </div>
-    <FloatPanel v-show = "showOnline" ref="main" :mumberLists = "groupMumbers"></FloatPanel>
+    <FloatPanel v-show="showOnline" ref="main" :mumberLists="groupMumbers"></FloatPanel>
   </div>
 </template>
 <script>
 import MessageItem from "@/components/MessageItem";
 import FloatPanel from "@/components/FloatPanel";
+import { login, register } from "../api";
+import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "ChatPanel",
@@ -145,30 +140,31 @@ export default {
     }
   },
   methods: {
+    ...mapMutations(["set_user", "set_token", "addGroup", "setCurrentGroupId"]),
     sendMessage() {
       // $socket is socket.io-client instance
       if (this.textarea != "") {
         let chatmessage = {
           time: this.getNowFormatDate(),
           value: this.textarea,
-          sourceName: this.$store.state.userName,
+          sourceName: this.userName,
           sid: this.$socket.id
         };
-        if (this.$store.state.currentGroupId === "all_public_connect") {
+        if (this.currentGroupId === "all_public_connect") {
           chatmessage.type = "hallMessage";
         } else {
           chatmessage.type = "roomMessage";
-          chatmessage.roomId = this.$store.state.currentGroupId;
+          chatmessage.roomId = this.currentGroupId;
         }
         //发给socket.io
         this.$socket.emit("message", chatmessage, data => {
           console.log(data);
           if (data.error === -1) {
             chatmessage.direction = "right";
-            this.$store.state.currentMessageList.push(chatmessage);
+            this.currentMessageList.push(chatmessage);
             //更新groupList这个数据集合里的message信息
-            this.$store.state.groupLists.forEach((item, index) => {
-              if (item.id === this.$store.state.currentGroupId) {
+            this.groupLists.forEach((item, index) => {
+              if (item.id === this.currentGroupId) {
                 item.freshMessage = chatmessage;
               }
             });
@@ -220,107 +216,107 @@ export default {
       this.showOnline = true;
       document.addEventListener("click", this.hidePanel, false);
     },
-
     hide() {
       this.showOnline = false;
       document.removeEventListener("click", this.hidePanel, false);
     },
-
     hidePanel(e) {
       if (!this.$refs.main.$el.contains(e.target)) {
         this.hide();
       }
     },
-
     //登录
-    signIn() {
-      //alert("signIn");
-      var params = new URLSearchParams();
-      params.append("username", this.loginForm.account);
-      params.append("password", this.loginForm.checkPass);
-      params.append("sid", this.$socket.id);
-      this.$http({
-        url: `http://127.0.0.1:3000/v1/login`,
-        method: "post",
-        data: params
-      })
-        .then(res => {
-          if (res.status === 200) {
-            console.log(res);
-            this.$store.state.userName = this.loginForm.account;
-            this.$store.state.userid = res.data.id;
-            //this.$store.state.token = res.data.token;
-            this.$store.commit("set_token", res.data.token);
+    async signIn() {
+      try {
+        let params = new URLSearchParams();
+        params.append("username", this.loginForm.account);
+        params.append("password", this.loginForm.checkPass);
+        params.append("sid", this.$socket.id);
 
-            if (this.$store.state.token) {
-              //成功登录
-              console.log(this.$store.state.token);
-
-              //创建一个有所有用户的大厅
-              this.$store.state.groupLists.push({
+        let responseValue = await login(params);
+        let { status, data } = responseValue;
+        if (status !== 200) {
+          throw data.message || "登录异常";
+        }
+        this.set_user({
+          userName: this.loginForm.account,
+          id: data.id
+        });
+        this.set_token(data.token);
+        if (this.token) {
+          // 登录成功
+          // 1. 默认加入大厅
+          this.$socket.emit("createRoom", "all_public_connect", data1 => {
+            // 2. 成功加入大厅
+            let { error, message } = data1;
+            if (error == 0) {
+              // 3. 创建/加入大厅失败
+              this.$message({
+                message,
+                type: "error"
+              });
+              return;
+            }
+            if (error == -1) {
+              // 4. 创建/加入大厅成功
+              this.$message({
+                message,
+                type: "success"
+              });
+              // 5. 保存roomId
+              this.addGroup({
                 id: "all_public_connect",
                 name: "群聊大厅"
               });
-              //选中当前联系人
-              this.$store.state.currentGroupId = "all_public_connect";
-
-              //查询大厅的所有消息回来
-              this.$http({
-                url: `http://127.0.0.1:3000/v2/room/all_public_conect`,
-                method: "get"
-              }).then(res => {
-                if (res.status === 200) {
-                  //更新vuex的值
-                  this.$store.state.currentMessageList = res.data;
-                }
-              });
-
-              //是不是要查询用户的room来push到groupList里...
-
-              this.$router.push({
-                path: "/" + this.$store.state.currentGroupId
-              });
-
-              //设置登录状态为true并关闭登录框
-              this.$store.state.loginState = true;
+              // 6. 设置currentGroupId
+              this.setCurrentGroupId("all_public_connect");
+              // 7. 路由跳转
+              this.$router.push(`/${this.currentGroupId}`);
+              // 8. 设置登录状态为true并关闭登录框
               this.dialogVisible = false;
             }
-          }
-          if (res.status === 400) {
-            console.log(res);
-          }
-        })
-        .catch(res => {
-          console.log("登录错误: ", res);
-          alert("登录错误，，请重新检查账号和密码！！");
+          });
+        }
+      } catch (err) {
+        this.$message({
+          message: err.message || "登录异常",
+          type: "error"
         });
+      }
     },
     //注册
-    signUp() {
-      var params = new URLSearchParams();
-      params.append("username", this.registerForm.account);
-      params.append("email", this.registerForm.email);
-      params.append("password", this.registerForm.checkPass);
-      console.log(params);
-      this.$http({
-        url: `http://127.0.0.1:3000/v1/user`,
-        method: "post",
-        data: params
-      })
-        .then(res => {
-          console.log(res);
-          if (res.status === 200) {
-            //返回一个用户id标记一个唯一的用户(res.data.id)
-            this.$store.state.userid = res.data.id;
-            alert("注册成功");
-          }
-        })
-        .catch(res => {
-          console.log("注册错误: ", res);
+    async signUp() {
+      try {
+        let params = new URLSearchParams();
+        params.append("username", this.registerForm.account);
+        params.append("email", this.registerForm.email);
+        params.append("password", this.registerForm.checkPass);
+        let responseValue = await register(params);
+        let { status, data } = responseValue;
+        if (status !== 200) {
+          throw data.message || "注册失败";
+        }
+        this.$message({
+          message: "注册成功",
+          type: "success"
         });
+      } catch (err) {
+        this.$message({
+          message: err.message || '注册失败',
+          type: 'error'
+        })
+      }
     }
   },
   computed: {
+    ...mapState([
+      "userName",
+      "userid",
+      "token",
+      "groupLists",
+      "currentGroupId",
+      "currentGroupName"
+    ]),
     groupMumbers() {
       return this.$store.state.currentGroupMumber;
     },

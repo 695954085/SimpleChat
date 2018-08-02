@@ -8,12 +8,11 @@ import fs from 'fs'
 import formidable from 'formidable'
 import socketDb from './socketdb'
 import chalk from '../node_modules/chalk';
+import { Request, Response } from 'express'
 
 class Admin {
 
     constructor() {
-        // this.register = Admin.prototype.register.bind(this);
-        // this.login = Admin.prototype.login.bind(this)
     }
 
     login(req, res, next) {
@@ -120,6 +119,12 @@ class Admin {
                     // 如果相等，那么清除token
                     doc.token = "";
                     doc.saveAsync();
+
+                    // socketDb清除数据
+                    let client = socketDb.getClientByUserName(username)
+                    if (client) {
+                        socketDb.logout(client)
+                    }
                 }
                 res.send({
                     message: "退出成功"
@@ -163,6 +168,12 @@ class Admin {
         });
     }
 
+    /**
+     * 返回用户信息
+     * @param {Request} req 
+     * @param {Response} res 
+     * @param {*} next 
+     */
     user(req, res, next) {
         User.find((err, users) => {
             if (err) {

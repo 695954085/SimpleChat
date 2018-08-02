@@ -52,13 +52,6 @@ class SocketDB {
       // 删除房间中的client
       let clientRooomIds = client.getRooms()
       if (clientRooomIds.length > 0) {
-        // clientRooomIds.forEach((roomId, index) => {
-        //   let room = this.rooms.get(roomId)
-        //   room.leaveRoom(client)
-        //   if (room.getRoomClientCount() === 0) {
-        //     this.rooms.delete(roomId)
-        //   }
-        // })
         while (clientRooomIds.length > 0) {
           let roomId = clientRooomIds.pop()
           let room = this.rooms.get(roomId)
@@ -71,6 +64,30 @@ class SocketDB {
       console.log(chalk.red(`${client.socket.id} 删除成功`))
     } else {
       console.log(chalk.red(`${client.socket.id} 已经不存在`))
+    }
+  }
+
+  /**
+   *  client退出登录
+   * @param {*} client 
+   */
+  logout(client) {
+    let index = this.clients.indexOf(client)
+    if (index !== -1) {
+      // 删除房间中的client
+      let clientRooomIds = client.getRooms()
+      if (clientRooomIds.length > 0) {
+        while (clientRooomIds.length > 0) {
+          let roomId = clientRooomIds.pop()
+          let room = this.rooms.get(roomId)
+          room.leaveRoom(client)
+          if (room.getRoomClientCount() === 0) {
+            this.rooms.delete(roomId)
+          }
+        }
+      }
+      client.logout(`${client.user.username}客户端主动退出登录`)
+      console.log(chalk.red(`${client.socket.id} 删除成功`))
     }
   }
 
@@ -112,6 +129,24 @@ class SocketDB {
     try {
       for (var client of this.clients) {
         if (client.getSocketId() === sid) {
+          return client
+        }
+      }
+      return null
+    } catch (err) {
+      console.log(chalk.red(err))
+      return null
+    }
+  }
+
+  /**
+   * 通过username返回client对象
+   * @param {string} username 
+   */
+  getClientByUserName(username) {
+    try {
+      for (var client of this.clients) {
+        if (client.user && client.user.username === username) {
           return client
         }
       }

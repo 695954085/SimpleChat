@@ -132,7 +132,7 @@ class Room {
     return this.clients.length
   }
 
-  contains(client){
+  contains(client) {
     return this.clients.indexOf(client) === -1 ? false : true
   }
 }
