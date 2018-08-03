@@ -37,6 +37,8 @@
   </div>
 </template>
 <script>
+import { mapMutations, mapState } from "vuex";
+import { login, register } from "../api";
 export default {
   name: "Login",
   data() {
@@ -56,6 +58,7 @@ export default {
     };
   },
   methods: {
+   ...mapMutations(["set_user", "set_token", "addGroup"]),
     handleTabClick(tab, event) {
       if (tab.name === "chat-signIn") {
         this.loginFormShow = true;
@@ -104,13 +107,10 @@ export default {
               });
               // 5. 保存roomId
               this.addGroup({
-                id: "all_public_connect",
-                name: "群聊大厅"
+                roomId: "all_public_connect"
               });
-              // 6. 设置currentGroupId
-              this.setCurrentGroupId("all_public_connect");
               // 7. 路由跳转
-              this.$router.push(`/${this.currentGroupId}`);
+              this.$router.push(`/${this.roomId}`);
               // 8. 设置登录状态为true并关闭登录框
               this.dialogVisible = false;
             }
@@ -146,6 +146,9 @@ export default {
         });
       }
     }
+  },
+  computed: {
+    ...mapState(['token'])
   }
 };
 </script>
