@@ -1,3 +1,4 @@
+import Vue from 'vue'
 export default {
   set_token(state, token) { //这里的state对应着上面这个state
     state.token = token;
@@ -19,7 +20,12 @@ export default {
   addGroup(state, payload) {
     state.groupLists.push(payload)
   },
-  setCurrentGroupId(state, currentGroupName){
-    state.currentGroupName = currentGroupName
-  },
+  addConversation(state, payload){
+    for(let groupItem of state.groupLists){
+      if(groupItem.roomId === payload.roomId){
+        if(!groupItem.conversation) Vue.set(groupItem, 'conversation', new Array())
+        groupItem.conversation.push(payload.val)
+      }
+    }
+  }
 }

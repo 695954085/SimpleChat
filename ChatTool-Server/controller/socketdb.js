@@ -3,7 +3,6 @@ import Client from './client'
 import chalk from '../node_modules/chalk';
 import { Request, Response } from 'express'
 import Dialog from '../model/dialog'
-import User from '../model/user';
 
 class SocketDB {
 
@@ -225,11 +224,11 @@ class SocketDB {
   async getUserRooms(req, res) {
     try {
       let username = req.params.username
-      let query = User.findOne({ username: username })
+      let query = Dialog.find({ userList: username }, { roomId: 1, owner: 1 })
       let result = await query.exec()
       res.send({
-        username: username,
-        rooms: result.rooms
+        username,
+        rooms: result
       })
     } catch (err) {
       console.log(chalk.red(err))

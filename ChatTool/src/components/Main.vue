@@ -1,107 +1,103 @@
 <template>
-<div class="chat-main" @click="showOnline = false">
-  <div class="chat-container">
-    <div class="chat-container-left" v-show="loginState">
-      <img class="chat-component-avatar" src="../assets/defaultAvatar.jpg" @click="setAvatar = true">
-      <ButtonList></ButtonList>
-      <el-dialog
-        title="个人信息设置"
-        :visible.sync="setAvatar"
-        width="30%">
-        <div class="chat-welcome-userName">你好,{{$store.state.userName}}</div>
-        <el-upload
-          class="avatar-uploader"
-          action="http://127.0.0.1:3000/v1/avatar"
-          :show-file-list="false"
-          :on-success="handleAvatarSuccess"
-          :before-upload="beforeAvatarUpload">
-          <img v-if="imageUrl" :src="imageUrl" class="avatar">
-          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-        </el-upload>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="setAvatar = false">取 消</el-button>
-          <el-button type="primary" @click="setAvatar = false">确 定</el-button>
-        </span>
-      </el-dialog>
-    </div>
-    <div class="chat-container-right">
-      <div class="chat-container-feature" v-show="loginState">
-        <div class="chat-container-search">
-          <input class="chat-search-text" type="text" placeholder="搜索群组/用户(待实现)" autocomplete="false">
-          <div class="chat-container-search-plus">
-            <i class="el-icon-circle-plus" @click="circlePlus = true"></i>
-          </div>
-        </div>
-        <el-dialog
-          title="创建群组"
-          :visible.sync="circlePlus"
-          width="30%">
-          <el-input v-model="groupnameInput" placeholder="输入一个好听的群名吧~~"></el-input>
-          <div class="chat-module-groupcreate">
-            <el-button @click="createGroup">创建</el-button>
-          </div>
+  <div class="chat-main" @click="showOnline = false">
+    <div class="chat-container">
+      <div class="chat-container-left" v-show="loginState">
+        <img class="chat-component-avatar" src="../assets/defaultAvatar.jpg" @click="setAvatar = true">
+        <ButtonList></ButtonList>
+        <el-dialog title="个人信息设置" :visible.sync="setAvatar" width="30%">
+          <div class="chat-welcome-userName">你好,{{userName}}</div>
+          <el-upload class="avatar-uploader" action="http://127.0.0.1:3000/v1/avatar" :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
+            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="setAvatar = false">取 消</el-button>
+            <el-button type="primary" @click="setAvatar = false">确 定</el-button>
+          </span>
         </el-dialog>
-        <LinkMan :groupLists = "groupLists" :activeId="activeId"></LinkMan>
       </div>
-      <div class="chat-container-chatpanel">
+      <div class="chat-container-right">
+        <div class="chat-container-feature" v-show="loginState">
+          <div class="chat-container-search">
+            <input class="chat-search-text" type="text" placeholder="搜索群组/用户(待实现)" autocomplete="false">
+            <div class="chat-container-search-plus">
+              <i class="el-icon-circle-plus" @click="circlePlus = true"></i>
+            </div>
+          </div>
+          <el-dialog title="创建群组" :visible.sync="circlePlus" width="30%">
+            <el-input v-model="groupnameInput" placeholder="输入一个好听的群名吧~~"></el-input>
+            <div class="chat-module-groupcreate">
+              <el-button @click="createGroup">创建</el-button>
+            </div>
+          </el-dialog>
+          <group-list></group-list>
+        </div>
+        <div class="chat-container-chatpanel">
           <transition name="fade" mode="out-in">
             <router-view/>
           </transition>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </template>
 <script>
 import ButtonList from "@/components/ButtonList";
-import LinkMan from "@/components/LinkMan";
+import GroupList from "@/components/GroupList";
+import { mapState, mapMutations } from "vuex";
 
 export default {
-  name: "Main2",
-  components: {
-    ButtonList: ButtonList,
-    LinkMan: LinkMan
-  },
   data() {
     return {
-      loginForm: {
-        account: "",
-        checkPass: ""
-      },
-      registerForm: {
-        account: "",
-        checkPass: "",
-        email: ""
-      },
       setAvatar: false,
       circlePlus: false,
       groupnameInput: "",
       imageUrl: ""
     };
   },
-  methods: {
-    userName() {
-      return this.$store.state.userName;
+  components: {
+    ButtonList,
+    GroupList
+  },
+  sockets: {
+    online(val) {
+      console.log(val);
     },
+    connect: function() {
+      console.log("socket connected");
+    },
+    disconnect: function(val) {
+      console.log(val);
+      //清理数据,,路由置回登录
+    },
+    error: function(val) {
+      console.log(val);
+    },
+    HallMessage: function(val) {
+      this.addConversation(Object.assign({},{val},{roomId: 'all_public_connect'}));
+    },
+    RoomAndPrivateMessage: function(val) {
+      val.direction = "left";
+      $store.state.currentMessageList.push(val);
+      //更新groupList这个数据集合里的message信息
+      this.$store.state.groupLists.forEach((item, index) => {
+        if (item.id === val.roomId) {
+          item.freshMessage = val;
+        }
+      });
+    }
+  },
+  methods: {
+    ...mapMutations(["addConversation"]),
     createGroup() {
       if (this.groupNameInput != undefined) {
-        //随机生成一个串，，然后查库比对是否不存在，作为唯一的串赖标记一个群聊的id
-        let groupId = Math.random()
-          .toString(36)
-          .substr(2);
-        //创建房间
-        this.$socket.emit("createRoom", groupId, data => {
-          this.$store.state.groupLists.push({
-            id: groupId,
-            name: this.groupNameInput,
-            mumber: [
-              { id: this.$store.state.userId, name: this.$store.state.userName }
-            ]
-          });
+        //1. 创建房间
+        this.$socket.emit("createRoom", this.groupNameInput, val => {
+          // 2. 房间创建成功
+          console.log(val);
         });
       }
     },
-
     handleAvatarSuccess(res, file) {
       this.imageUrl = URL.createObjectURL(file.raw);
     },
@@ -118,21 +114,12 @@ export default {
       return isJPG && isLt2M;
     }
   },
-  mounted() {
-  },
   computed: {
-    loginState() {
-      return this.$store.state.loginState;
-    },
-    groupLists() {
-      return this.$store.state.groupLists;
-    },
-    activeId() {
-      return this.$store.state.currentGroupId;
-    }
+    ...mapState(["userName", "loginState", "groupLists"])
   }
 };
 </script>
+
 <style lang="scss" scoped>
 .chat-main {
   width: 100%;

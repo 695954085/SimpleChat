@@ -1,7 +1,5 @@
 import chalk from 'chalk'
 import Dialog from '../model/dialog'
-import User from '../model/user'
-import util from 'util'
 
 /**
  * 此类是user和socket结合类
@@ -76,13 +74,6 @@ class Client {
       // 3. 推送房间在线人数
       this._sendOnlineMessage(roomId)
 
-      User.updateOne({ username: this.user.username }, { $pull: { rooms: roomId } }, (err, raw) => {
-        if (err) {
-          console.log(chalk.red(err))
-          return
-        }
-        console.log(chalk.green(util.inspect(raw)))
-      })
       callback({
         error: -1,
         message: `${roomId}房間userList成功刪除${this.user.username}`
@@ -173,20 +164,6 @@ class Client {
             message: `成功创建/加入${newRoomId}房间`,
             error: -1
           })
-
-          // 向user collection中加入rooms
-          User.findOne({ username: this.user.username }, (err, res) => {
-            if (err) {
-              console.log(chalk.red(err))
-              return
-            }
-            if (res != null) {
-              if (res.rooms.indexOf(newRoomId) === -1) {
-                res.rooms.push(newRoomId)
-                res.save()
-              }
-            }
-          })
         })
       }
     } catch (err) {
@@ -208,12 +185,6 @@ class Client {
           username: client.user.username
         }
       })
-      // let onlineClients = this.socketDb.getRoom(roomId).clients.map(client => {
-      //   return {
-      //     sid: client.socket.id,
-      //     username: client.user.username
-      //   }
-      // })
       this.io.to(roomId).emit('online', {
         roomId: roomId,
         onlineClients: onlineClients
@@ -251,7 +222,7 @@ class Client {
    * 發送大廳消息
    * @param {Object} message 
    */
-  _sendHallMessage(message) {
+  _sendHallMessage(message, callback) {
     // everyone gets it but the sender
     this.socket.broadcast.emit('HallMessage', message)
     callback({
@@ -271,11 +242,6 @@ class Client {
         })
         return
       }
-      // this.socket.to(roomId).emit('RoomAndPrivateMessage', function (data, fn) {
-      //   // 客户端收到消息时候回调
-      //   // acknowledgements are not supported when emitting from namespace.
-      //   // acknowledgements are not supported when broadcasting.
-      // });
       this.socket.to(roomId).emit('RoomAndPrivateMessage', message)
       callback({
         message: `${this.user.username} 發送到${roomId}房間的消息，成功發送`,

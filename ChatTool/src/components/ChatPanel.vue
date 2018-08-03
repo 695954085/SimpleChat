@@ -2,11 +2,11 @@
   <div class="chatpanel">
     <div class="chat-content-window">
       <div class="chat-window-header" v-show="loginState">
-        <h2 clas="chat-content-window-name">{{currentGroupName}}</h2>
+        <h2 clas="chat-content-window-name">{{roomId}}</h2>
         <i class="el-icon-menu" @click.stop="togglePanel"></i>
       </div>
       <div class="chat-window-body">
-        <MessageItem :time="messageList.time" :sourceName="messageList.sourceName" :sendContent="messageList.value" :direction="messageList.direction" :key="messageList.id" :index="'messageList_'+index" v-for="(messageList,index) in $store.state.currentMessageList">
+        <MessageItem :content="content" :key='index' v-for="(content,index) in conversation">
         </MessageItem>
       </div>
       <div class="chat-window-footer" v-show="loginState">
@@ -30,7 +30,7 @@
       </div>
      <Login v-show="!loginState"></Login>
     </div>
-    <FloatPanel v-show="showOnline" ref="main" :mumberLists="groupMumbers"></FloatPanel>
+    <FloatPanel v-show="showOnline" ref="main"></FloatPanel>
   </div>
 </template>
 <script>
@@ -50,67 +50,46 @@ export default {
   data() {
     return {
       textarea: "",
+<<<<<<< Updated upstream
       showOnline: false
       //messageLists:
       // [
       //   { "id": "message1", "time": "20180531", "sourceName": "xxx", "value": "testmessage1", "direction": "left" },
       //   { "id": "message2", "time": "20180601", "sourceName": "yyy", "value": "testmessage2", "direction": "right" }
       // ],
+=======
+      dialogVisible: false,
+      loginForm: {
+        account: "",
+        checkPass: ""
+      },
+      registerForm: {
+        account: "",
+        checkPass: "",
+        email: ""
+      },
+      loginFormShow: true,
+      activeName: "chat-signIn",
+      showOnline: false,
+      roomId: this.$route.params[0]
+>>>>>>> Stashed changes
     };
   },
-  sockets: {
-    connect: function() {
-      console.log("socket connected");
-    },
-    disconnect: function(val) {
-      console.log(val);
-      //清理数据,,路由置回登录
-    },
-    error: function(val) {
-      console.log(val);
-    },
-    HallMessage: function(val) {
-      //服务端用广播,,不用预自己
-      if (val.sourceName === this.$store.state.userName) {
-        val.direction = "right";
-      } else {
-        val.direction = "left";
-      }
-      this.$store.state.currentMessageList.push(val);
-      //更新groupList这个数据集合里的message信息
-      this.$store.state.groupLists.forEach((item, index) => {
-        if (item.id === "all_public_connect") {
-          item.freshMessage = val;
-        }
-      });
-    },
-    RoomAndPrivateMessage: function(val) {
-      val.direction = "left";
-      $store.state.currentMessageList.push(val);
-      //更新groupList这个数据集合里的message信息
-      this.$store.state.groupLists.forEach((item, index) => {
-        if (item.id === val.roomId) {
-          item.freshMessage = val;
-        }
-      });
-    }
-  },
   methods: {
-    ...mapMutations(["set_user", "set_token", "addGroup", "setCurrentGroupId"]),
+    ...mapMutations(["set_user", "set_token", "addGroup"]),
     sendMessage() {
-      // $socket is socket.io-client instance
       if (this.textarea != "") {
         let chatmessage = {
-          time: this.getNowFormatDate(),
+          date: this.getNowFormatDate(),
           value: this.textarea,
-          sourceName: this.userName,
-          sid: this.$socket.id
+          username: this.userName,
+          contentType: "String"
         };
-        if (this.currentGroupId === "all_public_connect") {
+        if (this.roomId === "all_public_connect") {
           chatmessage.type = "hallMessage";
         } else {
           chatmessage.type = "roomMessage";
-          chatmessage.roomId = this.currentGroupId;
+          chatmessage.roomId = this.roomId;
         }
         //发给socket.io
         this.$socket.emit("message", chatmessage, data => {
@@ -120,7 +99,7 @@ export default {
             this.currentMessageList.push(chatmessage);
             //更新groupList这个数据集合里的message信息
             this.groupLists.forEach((item, index) => {
-              if (item.id === this.currentGroupId) {
+              if (item.id === this.roomId) {
                 item.freshMessage = chatmessage;
               }
             });
@@ -173,6 +152,89 @@ export default {
         this.hide();
       }
     },
+<<<<<<< Updated upstream
+=======
+    //登录
+    async signIn() {
+      try {
+        let params = new URLSearchParams();
+        params.append("username", this.loginForm.account);
+        params.append("password", this.loginForm.checkPass);
+        params.append("sid", this.$socket.id);
+
+        let responseValue = await login(params);
+        let { status, data } = responseValue;
+        if (status !== 200) {
+          throw data.message || "登录异常";
+        }
+        this.set_user({
+          userName: this.loginForm.account,
+          id: data.id
+        });
+        this.set_token(data.token);
+        if (this.token) {
+          // 登录成功
+          // 1. 默认加入大厅
+          this.$socket.emit("createRoom", "all_public_connect", data1 => {
+            // 2. 成功加入大厅
+            let { error, message } = data1;
+            if (error == 0) {
+              // 3. 创建/加入大厅失败
+              this.$message({
+                message,
+                type: "error"
+              });
+              return;
+            }
+            if (error == -1) {
+              // 4. 创建/加入大厅成功
+              this.$message({
+                message,
+                type: "success"
+              });
+              // 5. 保存roomId
+              this.addGroup({
+                roomId: "all_public_connect"
+              });
+              this.roomId = "all_public_connect";
+              // 7. 路由跳转
+              this.$router.push(`/${this.roomId}`);
+              // 8. 设置登录状态为true并关闭登录框
+              this.dialogVisible = false;
+            }
+          });
+        }
+      } catch (err) {
+        this.$message({
+          message: err.message || "登录异常",
+          type: "error"
+        });
+      }
+    },
+    //注册
+    async signUp() {
+      try {
+        let params = new URLSearchParams();
+        params.append("username", this.registerForm.account);
+        params.append("email", this.registerForm.email);
+        params.append("password", this.registerForm.checkPass);
+        let responseValue = await register(params);
+        let { status, data } = responseValue;
+        if (status !== 200) {
+          throw data.message || "注册失败";
+        }
+        this.$message({
+          message: "注册成功",
+          type: "success"
+        });
+      } catch (err) {
+        this.$message({
+          message: err.message || "注册失败",
+          type: "error"
+        });
+      }
+    }
+>>>>>>> Stashed changes
   },
   computed: {
     ...mapState([
@@ -180,14 +242,20 @@ export default {
       "userid",
       "token",
       "groupLists",
-      "currentGroupId",
-      "currentGroupName"
+      "currentGroupName",
+      "loginState"
     ]),
-    groupMumbers() {
-      return this.$store.state.currentGroupMumber;
+    currentRoom() {
+      for (let groupItem of this.groupLists) {
+        if (groupItem.roomId === this.roomId) {
+          return groupItem;
+        }
+      }
+      return null;
     },
-    loginState() {
-      return this.$store.state.loginState;
+    conversation() {
+      if (!this.currentRoom) return null;
+      return this.currentRoom.conversation;
     }
   }
 };

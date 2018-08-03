@@ -38,8 +38,9 @@ router(app);
 // error handler
 app.use(function (err, req, res, next) {
   if (err) {
+    res.setHeader('ContentType','application/json;chatset=utf-8')
     res.status(err.status || 500);
-    res.send(util.inspect(err));
+    res.send({message: err.message});
   }
 });
 ioController(io);

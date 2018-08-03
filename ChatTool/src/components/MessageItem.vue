@@ -1,28 +1,29 @@
 <template>
   <div class="messageItem">
-    <div :class="'chatTool-message-list-time-'+direction">{{sourceName}}({{time}})</div>
+    <div :class="'chatTool-message-list-time-'+direction">{{content.username}}({{content.date}})</div>
     <div :class="'chatTool-message-container-'+direction">
       <span class="chatTool-message-triangle-left" v-if="showPrise1"></span>
-      <div :class="'chatTool-message-article-'+direction">{{sendContent}}</div>
+      <div :class="'chatTool-message-article-'+direction">{{content.value}}</div>
       <span class="chatTool-message-triangle-right" v-if="showPrise2"></span>
     </div>
   </div>
 </template>
 <script>
+import { mapState } from 'vuex';
 export default {
-  name: 'MessageItem',
-  props:["sourceName","time","sendContent","direction"],
+  name: "MessageItem",
+  props: ['content'],
   data() {
     return {
       showPrise1: false,
-      showPrise2: false,
+      showPrise2: false
+    };
+  },
+  computed:{
+    ...mapState(['userName']),
+    direction(){
+      return this.content.username === this.userName ?  'right' : 'left'
     }
-  },
-  method: {
-
-  },
-  computed: {
-
   },
   mounted: function() {
     if (this.direction === "left") {
@@ -31,7 +32,7 @@ export default {
       this.showPrise2 = true;
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -48,12 +49,12 @@ export default {
     @include messagequeue(right);
   }
   .chatTool-message-list-time-left {
-    font-size: .8rem;
+    font-size: 0.8rem;
     padding: 10px 0 6px 30px;
     text-align: left;
   }
   .chatTool-message-list-time-right {
-    font-size: .8rem;
+    font-size: 0.8rem;
     padding: 10px 30px 6px 0;
     text-align: right;
   }

@@ -65,6 +65,7 @@ class Admin {
                             res.send(Object.assign(content, { token: token }));
                         } catch (err) {
                             console.log(chalk.red(err))
+                            next(createError(err))
                         }
                     })
                 })
