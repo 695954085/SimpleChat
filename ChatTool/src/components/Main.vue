@@ -25,7 +25,7 @@
             </div>
           </div>
           <el-dialog title="创建群组" :visible.sync="circlePlus" width="30%">
-            <el-input v-model="groupnameInput" placeholder="输入一个好听的群名吧~~"></el-input>
+            <el-input v-model="roomIdInput" placeholder="输入一个好听的群名吧~~"></el-input>
             <div class="chat-module-groupcreate">
               <el-button @click="createGroup">创建</el-button>
             </div>
@@ -51,7 +51,7 @@ export default {
     return {
       setAvatar: false,
       circlePlus: false,
-      groupnameInput: "",
+      roomIdInput: "",
       imageUrl: ""
     };
   },
@@ -63,38 +63,46 @@ export default {
     online(val) {
       console.log(val);
     },
-    connect: function() {
-      console.log("socket connected");
-    },
-    disconnect: function(val) {
-      console.log(val);
-      //清理数据,,路由置回登录
-    },
-    error: function(val) {
-      console.log(val);
-    },
     HallMessage: function(val) {
-      this.addConversation(Object.assign({},{val},{roomId: 'all_public_connect'}));
+      this.addConversation(
+        Object.assign({}, { val }, { roomId: "all_public_connect" })
+      );
     },
     RoomAndPrivateMessage: function(val) {
-      val.direction = "left";
-      $store.state.currentMessageList.push(val);
-      //更新groupList这个数据集合里的message信息
-      this.$store.state.groupLists.forEach((item, index) => {
-        if (item.id === val.roomId) {
-          item.freshMessage = val;
-        }
-      });
+      this.addConversation(Object.assign({}, { val }, { roomId: val.roomId }));
     }
   },
   methods: {
-    ...mapMutations(["addConversation"]),
+    ...mapMutations(["addConversation", "addGroup"]),
     createGroup() {
-      if (this.groupNameInput != undefined) {
+      try {
+        if (!this.roomIdInput) throw new Error("房间名称不能为空");
         //1. 创建房间
-        this.$socket.emit("createRoom", this.groupNameInput, val => {
+        this.$socket.emit("createRoom", this.roomIdInput, val => {
           // 2. 房间创建成功
-          console.log(val);
+          let { message, error } = val;
+          if (error == 1) {
+            this.$message({
+              message: err.message || "房间创建异常",
+              type: "error"
+            });
+          } else {
+            this.$message({
+              message: message,
+              type: "success"
+            });
+            this.addGroup({
+              roomId: this.roomIdInput
+            });
+            this.addConversation({ roomId: this.roomIdInput });
+          }
+          this.roomIdInput = ""
+        });
+        this.circlePlus = false;
+      } catch (err) {
+        this.$message({
+          message: err.message || "房间创建异常",
+          type: "error"
         });
       }
     },
@@ -121,6 +129,41 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/*图片上传 start*/
+.chat-welcome-userName {
+  margin: 20px 0;
+}
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader .el-upload:hover {
+  border-color: #409eff;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
+}
+.avatar {
+  width: 100px;
+  height: 100px;
+  display: block;
+}
+.chat-module-groupcreate {
+  padding-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+/*图片上传 end*/
+
 .chat-main {
   width: 100%;
   height: 100%;
@@ -227,41 +270,4 @@ export default {
     }
   }
 }
-</style>
-
-<style lang="scss">
-/*图片上传 start*/
-.chat-welcome-userName {
-  margin: 20px 0;
-}
-.avatar-uploader .el-upload {
-  border: 1px dashed #d9d9d9;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-.avatar-uploader .el-upload:hover {
-  border-color: #409eff;
-}
-
-.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 100px;
-  height: 100px;
-  line-height: 100px;
-  text-align: center;
-}
-.avatar {
-  width: 100px;
-  height: 100px;
-  display: block;
-}
-.chat-module-groupcreate {
-  padding-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-/*图片上传 end*/
 </style>

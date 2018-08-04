@@ -3,7 +3,7 @@
     <div class="chat-content-window">
       <div class="chat-window-header" v-show="loginState">
         <h2 clas="chat-content-window-name">{{roomId}}</h2>
-        <i class="el-icon-menu" @click.stop="togglePanel"></i>
+        <i class="el-icon-menu" @click.stop="showOnline = true"></i>
       </div>
       <div class="chat-window-body">
         <MessageItem :content="content" :key='index' v-for="(content,index) in conversation">
@@ -28,7 +28,7 @@
           <button class="chat-sendBtn" @click="sendMessage">发送(S)</button>
         </div>
       </div>
-     <Login v-show="!loginState"></Login>
+      <Login v-show="!loginState"></Login>
     </div>
     <FloatPanel v-show="showOnline" ref="main"></FloatPanel>
   </div>
@@ -36,20 +36,20 @@
 <script>
 import MessageItem from "@/components/MessageItem";
 import FloatPanel from "@/components/FloatPanel";
-import Login from "@/components/Login"
-import { mapState, mapMutations } from "vuex";
+import Login from "@/components/Login";
+import { mapState, mapMutations, mapGetters } from "vuex";
 
 export default {
   name: "ChatPanel",
   components: {
     MessageItem: MessageItem,
     FloatPanel: FloatPanel,
-    Login:Login
+    Login: Login
   },
   data() {
     return {
       textarea: "",
-      showOnline: false,
+      showOnline: false
     };
   },
   methods: {
@@ -69,19 +69,19 @@ export default {
         }
         //发给socket.io
         this.$socket.emit("message", chatmessage, data => {
-          console.log(data);
-          if (data.error === -1) {
-            chatmessage.direction = "right";
-            this.currentMessageList.push(chatmessage);
-            //更新groupList这个数据集合里的message信息
-            this.groupLists.forEach((item, index) => {
-              if (item.id === this.roomId) {
-                item.freshMessage = chatmessage;
-              }
-            });
+          let {error, message} = data
+          if (error === -1) {
+            //消息发送成功
+            //插入到groupLists中
+            let currentGroup = this.getCurrentGroup(this.roomId);
+            currentGroup.conversation.push(chatmessage);
+            this.textarea = "";
           }
-          if (data.error === 0) {
-            console.error(data.message);
+          if (error === 0) {
+            this.$message({
+              message: message || "消息发送失败",
+              type: "error"
+            });
           }
         });
       }
@@ -111,47 +111,25 @@ export default {
         seperator2 +
         date.getSeconds();
       return currentdate;
-    },
-    togglePanel() {
-      this.showOnline ? this.hide() : this.show();
-    },
-    show() {
-      this.showOnline = true;
-      document.addEventListener("click", this.hidePanel, false);
-    },
-    hide() {
-      this.showOnline = false;
-      document.removeEventListener("click", this.hidePanel, false);
-    },
-    hidePanel(e) {
-      if (!this.$refs.main.$el.contains(e.target)) {
-        this.hide();
-      }
-    },
-  },
-  computed: {
-    ...mapState([
-      "userName",
-      "groupLists",
-      "loginState"
-    ]),
-    currentRoom() {
-      for (let groupItem of this.groupLists) {
-        if (groupItem.roomId === this.roomId) {
-          return groupItem;
-        }
-      }
-      return null;
-    },
-    conversation() {
-      if (!this.currentRoom) return null;
-      return this.currentRoom.conversation;
-    },
-    roomId(){
-      return this.$route.params[0]
     }
   },
-  mouted(){
+  computed: {
+    ...mapState(["userName", "groupLists", "loginState"]),
+    ...mapGetters(["getCurrentGroup"]),
+    conversation() {
+      if (!this.getCurrentGroup(this.roomId)) return null;
+      return this.getCurrentGroup(this.roomId).conversation;
+    },
+    roomId() {
+      return this.$route.params[0];
+    }
+  },
+  mounted() {
+    document.addEventListener("click", ev => {
+      if(this.$refs['main'] && !this.$refs['main'].$el.contains(ev.target)){
+        this.showOnline = false
+      }
+    });
   }
 };
 </script>

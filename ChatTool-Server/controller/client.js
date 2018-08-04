@@ -227,7 +227,7 @@ class Client {
     this.socket.broadcast.emit('HallMessage', message)
     callback({
       message: `${this.user.username} 發送到大厅的消息，成功發送`,
-      code: -1
+      error: -1
     })
   }
 
@@ -238,7 +238,7 @@ class Client {
         console.log(chalk.red('roomId 和 value 不能为空'))
         callback({
           message: 'roomId 和 value 不能为空',
-          code: 0
+          error: 0
         })
         return
       }

@@ -58,7 +58,7 @@ export default {
     };
   },
   methods: {
-   ...mapMutations(["set_user", "set_token", "addGroup"]),
+   ...mapMutations(["set_user", "set_token", "addGroup", "addConversation"]),
     handleTabClick(tab, event) {
       if (tab.name === "chat-signIn") {
         this.loginFormShow = true;
@@ -109,8 +109,9 @@ export default {
               this.addGroup({
                 roomId: "all_public_connect"
               });
+              this.addConversation({roomId: "all_public_connect"})
               // 7. 路由跳转
-              this.$router.push(`/${this.roomId}`);
+              this.$router.push(`/all_public_connect`);
               // 8. 设置登录状态为true并关闭登录框
               this.dialogVisible = false;
             }

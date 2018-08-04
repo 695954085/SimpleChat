@@ -20,11 +20,12 @@ export default {
   addGroup(state, payload) {
     state.groupLists.push(payload)
   },
-  addConversation(state, payload){
-    for(let groupItem of state.groupLists){
-      if(groupItem.roomId === payload.roomId){
-        if(!groupItem.conversation) Vue.set(groupItem, 'conversation', new Array())
-        groupItem.conversation.push(payload.val)
+  addConversation(state, payload) {
+    for (let groupItem of state.groupLists) {
+      if (groupItem.roomId === payload.roomId) {
+        if (!groupItem.conversation) Vue.set(groupItem, 'conversation', new Array())
+        if (payload.val) groupItem.conversation.push(payload.val)
+        break
       }
     }
   }
