@@ -44,7 +44,7 @@
 <script>
 import ButtonList from "@/components/ButtonList";
 import GroupList from "@/components/GroupList";
-import { mapState, mapMutations } from "vuex";
+import { mapState, mapMutations, mapGetters } from "vuex";
 
 export default {
   data() {
@@ -62,6 +62,9 @@ export default {
   sockets: {
     online(val) {
       console.log(val);
+      if (val) {
+        this.updateOnlineClients(val)
+      }
     },
     HallMessage: function(val) {
       this.addConversation(
@@ -73,7 +76,7 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(["addConversation", "addGroup"]),
+    ...mapMutations(["addConversation", "addGroup", "updateOnlineClients"]),
     createGroup() {
       try {
         if (!this.roomIdInput) throw new Error("房间名称不能为空");
@@ -96,7 +99,7 @@ export default {
             });
             this.addConversation({ roomId: this.roomIdInput });
           }
-          this.roomIdInput = ""
+          this.roomIdInput = "";
         });
         this.circlePlus = false;
       } catch (err) {
@@ -123,7 +126,8 @@ export default {
     }
   },
   computed: {
-    ...mapState(["userName", "loginState", "groupLists"])
+    ...mapState(["userName", "loginState", "groupLists"]),
+    ...mapGetters(["getCurrentGroup"])
   }
 };
 </script>

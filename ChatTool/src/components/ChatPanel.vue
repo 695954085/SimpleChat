@@ -30,7 +30,7 @@
       </div>
       <Login v-show="!loginState"></Login>
     </div>
-    <FloatPanel v-show="showOnline" ref="main"></FloatPanel>
+    <FloatPanel v-show="showOnline" ref="main" :roomId='roomId'></FloatPanel>
   </div>
 </template>
 <script>
@@ -69,7 +69,7 @@ export default {
         }
         //发给socket.io
         this.$socket.emit("message", chatmessage, data => {
-          let {error, message} = data
+          let { error, message } = data;
           if (error === -1) {
             //消息发送成功
             //插入到groupLists中
@@ -126,8 +126,8 @@ export default {
   },
   mounted() {
     document.addEventListener("click", ev => {
-      if(this.$refs['main'] && !this.$refs['main'].$el.contains(ev.target)){
-        this.showOnline = false
+      if (this.$refs["main"] && !this.$refs["main"].$el.contains(ev.target)) {
+        this.showOnline = false;
       }
     });
   }

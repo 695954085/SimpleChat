@@ -28,5 +28,27 @@ export default {
         break
       }
     }
+  },
+  updateOnlineClients(state, payload) {
+    let { roomId, onlineClients } = payload
+    if (roomId && onlineClients) {
+      for (let groupItem of state.groupLists) {
+        if (groupItem.roomId === roomId) {
+          Vue.set(groupItem, 'onlineClients', onlineClients)
+          break
+        }
+      }
+    }
+  },
+  deleteGroup(state, roomId) {
+    if (roomId) {
+      for (let groupItem of state.groupLists) {
+        if (groupItem.roomId === roomId) {
+          let index = state.groupLists.indexOf(groupItem)
+          state.groupLists.splice(index, 1)
+          break
+        }
+      }
+    }
   }
 }

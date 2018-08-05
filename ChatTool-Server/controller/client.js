@@ -159,11 +159,11 @@ class Client {
           await this.socketDb.createRoom(newRoomId, this)
 
           // 向房间全部人推送在线人数的变化
-          this._sendOnlineMessage(newRoomId)
           callback({
             message: `成功创建/加入${newRoomId}房间`,
             error: -1
           })
+          this._sendOnlineMessage(newRoomId)
         })
       }
     } catch (err) {
@@ -174,14 +174,9 @@ class Client {
   _sendOnlineMessage(roomId) {
     try {
       // 向房间全部人推送在线人数的变化
-      let onlineSocketIds = Object.keys(this.io.to(roomId).sockets)
-      let onlineClients = onlineSocketIds.filter(socketId => {
-        let client = this.socketDb.getClient(socketId)
-        return client.user === null ? false : true
-      }).map(socketId => {
-        let client = this.socketDb.getClient(socketId)
+      let onlineClients = this.socketDb.getRoom(roomId).clients.map(client => {
         return {
-          sid: socketId,
+          sid: client.socket.id,
           username: client.user.username
         }
       })
@@ -234,6 +229,15 @@ class Client {
   _sendRoomAndProvateMessage(message, callback) {
     try {
       let { roomId, value } = message
+      // 判断这个socket是够属于该房间
+      if (this.rooms.indexOf(roomId) === -1) {
+        console.log(chalk.red(`${this.user.username}不拥有${roomId}房间`))
+        callback({
+          message: `${this.user.username}不拥有${roomId}房间`,
+          error: 0
+        })
+        return
+      }
       if (!roomId || !value) {
         console.log(chalk.red('roomId 和 value 不能为空'))
         callback({
