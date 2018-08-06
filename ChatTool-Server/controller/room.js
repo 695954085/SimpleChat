@@ -13,24 +13,6 @@ class Room {
   async init() {
     try {
       // 首先判断是否已经存在该表
-      // Dialog.findOne({ roomId: this.roomId }).then(value => {
-      //   if (value !== null) {
-      //     console.log(chalk.green(`${this.roomId} collection 已经在`))
-      //     throw `${this.roomId}的dialog已存在`
-      //   }
-      //   let dialog = new Dialog({
-      //     roomId: this.roomId,
-      //     owner: this.ownerUserName
-      //   })
-      //   return dialog.save()
-      // }, reason => {
-      //   console.log(chalk.red('Dialog.findOne异常'))
-      //   console.log(chalk.red(reason))
-      // }).then(value => {
-      //   console.log(chalk.green(`${this.roomId}房间数据集合创建成功`))
-      // }, reason => {
-      //   console.log(chalk.red(reason))
-      // })
       let query = Dialog.findOne({ roomId: this.roomId })
       let dialog = await query.exec()
       if (dialog != null) {
@@ -62,23 +44,6 @@ class Room {
           console.log(chalk.red(`${client}的user不能为空`))
         }
         // 用户名信息放进去dialog里面
-        // Dialog.findOne({ roomId: this.roomId }).then(room => {
-        //   if (room == null) {
-        //     return Promise.reject(`${this.roomId}房间在dialog中为空`)
-        //   }
-        //   let { userList } = room
-        //   if (userList == null) {
-        //     room.userList = new Array()
-        //   }
-        //   room.userList.push(client.user.username)
-        //   return room.save()
-        // }, err => {
-        //   console.log(chalk.red(err))
-        // }).then(() => {
-        //   console.log(chalk.green(`${client.user.username}成功插入${this.roomId}的userList`))
-        // }, reason => {
-        //   console.log(chalk.red(reason))
-        // })
         let query = Dialog.findOne({ roomId: this.roomId })
         let room = await query.exec()
         if (room == null) {

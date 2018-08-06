@@ -6,3 +6,4 @@ if (!module.parent) {
     console.log('listening on *:3000');
   })
 }
+module.exports = server
