@@ -6,7 +6,13 @@
         <ButtonList></ButtonList>
         <el-dialog title="个人信息设置" :visible.sync="setAvatar" width="30%">
           <div class="chat-welcome-userName">你好,{{userName}}</div>
-          <el-upload class="avatar-uploader" action="http://127.0.0.1:3000/v1/avatar" :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
+          <el-upload class="avatar-uploader"
+          action="http://127.0.0.1:3000/v1/avatar"
+          :show-file-list="false"
+          :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload"
+          name='avatar'
+          :data='{username: userName}'>
             <img v-if="imageUrl" :src="imageUrl" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
