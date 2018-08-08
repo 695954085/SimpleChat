@@ -50,5 +50,8 @@ export default {
         }
       }
     }
+  },
+  setAvatar(state, path) {
+    state.avatar = path
   }
 }

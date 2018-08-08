@@ -2,7 +2,7 @@
   <div class="chat-main" @click="showOnline = false">
     <div class="chat-container">
       <div class="chat-container-left" v-show="loginState">
-        <img class="chat-component-avatar" src="../assets/defaultAvatar.jpg" @click="setAvatar = true">
+        <img class="chat-component-avatar" :src="avatar" @click="setAvatar = true">
         <ButtonList></ButtonList>
         <el-dialog title="个人信息设置" :visible.sync="setAvatar" width="30%">
           <div class="chat-welcome-userName">你好,{{userName}}</div>
@@ -116,6 +116,7 @@ export default {
       }
     },
     handleAvatarSuccess(res, file) {
+      console.log(res)
       this.imageUrl = URL.createObjectURL(file.raw);
     },
     beforeAvatarUpload(file) {
@@ -132,7 +133,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(["userName", "loginState", "groupLists"]),
+    ...mapState(["userName", "loginState", "groupLists", "avatar"]),
     ...mapGetters(["getCurrentGroup"])
   }
 };

@@ -11,31 +11,35 @@ import socketDb from './socketdb'
 import chalk from '../node_modules/chalk';
 import { Request, Response } from 'express'
 bluebird.promisifyAll(fs)
+bluebird.promisifyAll(jwt)
 class Admin {
 
 	constructor() {
 		this.uploadAvatar = this.uploadAvatar.bind(this)
 	}
 
-	login(req, res, next) {
-		var form = req.body;
-		if (_.isEmpty(form)) {
-			next(createError(500, '入参不能为空'))
-			return
-		}
-		aasdUser.findOne({ username: form.username }, (err, user) => {
-			if (err) {
-				next(createError(500, err.msg));
-				return;
+	async login(req, res, next) {
+		try {
+			let form = req.body;
+			if (_.isEmpty(form)) {
+				next(createError(400, '入参不能为空'))
+				return
 			}
+			let { username, sid, password } = form
+			if (!username || !sid || !password) {
+				next(createError(400, '缺少入参'))
+				return
+			}
+			let query = User.findOne({ username })
+			let user = await query.exec()
 			if (!user) {
-				next(createError(500, "没有该用户"));
-				return;
+				next(createError(400, "没有该用户"));
+				return
 			}
-			user.comparePassword(form.password, function (err, isMatch) {
+			user.comparePassword(password, async (err, isMatch) => {
 				if (err) {
-					next(err);
-					return;
+					next(createError(400, err.message))
+					return
 				}
 				if (!isMatch) {
 					// 密码不正确
@@ -43,71 +47,60 @@ class Admin {
 					return;
 				}
 				// 生成token
-				jwt.sign({ username: user.username }, config.get("Customer.jwtSecret"), {
-					expiresIn: '1h'
-				}, function (err, token) {
-					if (err) {
-						next(createError(err));
-						return;
-					}
-					user.token = token;
-					user.save(function (err) {
-						if (err) {
-							next(createError(err));
-							return;
-						}
-						var content = {
-							username: user.username,
-							avatar: user.avatar,
-							id: user._id
-						}
-						// 关联admin与client
-						try {
-							socketDb.getClient(form.sid).setUser(content)
-							res.send(Object.assign(content, { token: token }));
-						} catch (err) {
-							console.log(chalk.red(err))
-							next(createError(err))
-						}
-					})
-				})
+				let token = await jwt.signAsync({ username }, config.get("Customer.jwtSecret"), { expiresIn: '1h' })
+				user.token = token;
+				user = await user.save()
+				let content = {
+					username,
+					avatar: user.avatar || '/default.jpg',
+					id: user._id
+				}
+				// 关联admin与client
+				let client = socketDb.getClient(sid)
+				if (client) {
+					client.setUser(content)
+					res.send(Object.assign(content, { token }));
+				} else {
+					next(createError(400, 'sid匹配不到client'))
+				}
 			})
-		})
+		} catch (err) {
+			next(err)
+		}
 	}
 
-	register(req, res, next) {
-		var form = req.body;
-		if (_.isEmpty(form)) {
-			next(createError(500, '入参不能为空'))
-			return
-		}
-		User.findOne({ username: form.username }, (err, user) => {
-			if (err) {
-				next(createError(500, err.msg));
-				return;
+	async register(req, res, next) {
+		try {
+			let form = req.body;
+			if (_.isEmpty(form)) {
+				next(createError(400, '入参不能为空'))
+				return
 			}
+			let { password, username } = form
+			if (!username || !password) {
+				next(createError(400, '缺少入参'))
+				return
+			}
+			let query = User.findOne({ username })
+			let user = await query.exec()
 			if (user) {
 				// 该用户已存在
 				next(createError(400, "该用户已存在"));
 				return;
 			}
-			var user = new User({
-				username: form.username,
-				password: form.password,
-				date: new Date()
+			user = new User({
+				username,
+				password,
+				date: new Date(),
+				avatar: '/default.jpg'
 			});
-			user.save(function (err, doc) {
-				if (err) {
-					next(createError(500, err.msg));
-					return;
-				}
-				if (doc) {
-					res.send({
-						id: user._id
-					});
-				}
-			});
-		});
+			user = await user.save()
+			res.send({
+				id: user._id
+			})
+		} catch (err) {
+			next(createError(500, err))
+		}
 	}
 
 	signOut(req, res, next) {
@@ -174,27 +167,18 @@ class Admin {
 			form.uploadDir = imgDirectory;
 			form.keepExtensions = true;
 			form.type = 'multipart';
-			form.parse(req, (err, fields, files) => {
+			form.parse(req, async (err, fields, files) => {
 				try {
 					if (err) {
 						next(err);
 						return;
 					}
 					let { username } = fields;
-					let extension = files['avatar'].name.split('.')[files['avatar'].name.split('.').length - 1] || 'jpg';
-					let readStream = fs.createReadStream(files['avatar'].path);
-					let writeStream = fs.createWriteStream(path.join(__dirname, '../public/', `${username}_avatar.${extension}`));
-					readStream.pipe(writeStream);
-					readStream.on('close', async () => {
-						try {
-							await fs.unlinkAsync(files['avatar'].path)
-							res.send({
-								message: '头像成功上传'
-							})
-						} catch (err) {
-							next(err)
-							return
-						}
+					let extName = path.extname(files['avatar'].name)
+					await fs.rename(files['avatar'].path, path.join(__dirname, '../public', `${username}_avatar${extName}`))
+					res.send({
+						message: '头像上传成功',
+						path: `/${username}_avatar${extName}`
 					})
 				} catch (err) {
 					next(err)
