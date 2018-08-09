@@ -58,7 +58,7 @@ export default {
     };
   },
   methods: {
-   ...mapMutations(["set_user", "set_token", "addGroup", "addConversation"]),
+   ...mapMutations(["set_user", "set_token", "addGroup", "addConversation", "setAvatar"]),
     handleTabClick(tab, event) {
       if (tab.name === "chat-signIn") {
         this.loginFormShow = true;
@@ -85,6 +85,7 @@ export default {
           id: data.id
         });
         this.set_token(data.token);
+        this.setAvatar(data.avatar)
         if (this.token) {
           // 登录成功
           // 1. 默认加入大厅

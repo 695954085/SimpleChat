@@ -2,23 +2,17 @@
   <div class="chat-main" @click="showOnline = false">
     <div class="chat-container">
       <div class="chat-container-left" v-show="loginState">
-        <img class="chat-component-avatar" :src="avatar" @click="setAvatar = true">
+        <img class="chat-component-avatar" :src="avatar" @click="dialogVisible = true">
         <ButtonList></ButtonList>
-        <el-dialog title="个人信息设置" :visible.sync="setAvatar" width="30%">
+        <el-dialog title="个人信息设置" :visible.sync="dialogVisible" width="30%">
           <div class="chat-welcome-userName">你好,{{userName}}</div>
-          <el-upload class="avatar-uploader"
-          action="http://127.0.0.1:3000/v1/avatar"
-          :show-file-list="false"
-          :on-success="handleAvatarSuccess"
-          :before-upload="beforeAvatarUpload"
-          name='avatar'
-          :data='{username: userName}'>
+          <el-upload class="avatar-uploader" :action="avatarUploadUrl" :headers='{Authorization: `bearer ${token}`}' :show-file-list="false" :before-upload="beforeAvatarUpload" name='avatar' :data='{username: userName}' :auto-upload="false" ref='upload' :on-change="changeAvatar" :on-success='successAvatarUpload'>
             <img v-if="imageUrl" :src="imageUrl" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
           <span slot="footer" class="dialog-footer">
-            <el-button @click="setAvatar = false">取 消</el-button>
-            <el-button type="primary" @click="setAvatar = false">确 定</el-button>
+            <el-button @click="cancelSubmit">取 消</el-button>
+            <el-button type="primary" @click="submit">上 传</el-button>
           </span>
         </el-dialog>
       </div>
@@ -51,14 +45,16 @@
 import ButtonList from "@/components/ButtonList";
 import GroupList from "@/components/GroupList";
 import { mapState, mapMutations, mapGetters } from "vuex";
+import config from "../config";
 
 export default {
   data() {
     return {
-      setAvatar: false,
       circlePlus: false,
       roomIdInput: "",
-      imageUrl: ""
+      imageUrl: "",
+      avatarUploadUrl: `${config.IP}:${config.PORT}/v1/avatar`,
+      dialogVisible: false
     };
   },
   components: {
@@ -69,7 +65,7 @@ export default {
     online(val) {
       console.log(val);
       if (val) {
-        this.updateOnlineClients(val)
+        this.updateOnlineClients(val);
       }
     },
     HallMessage: function(val) {
@@ -82,7 +78,12 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(["addConversation", "addGroup", "updateOnlineClients"]),
+    ...mapMutations([
+      "addConversation",
+      "addGroup",
+      "updateOnlineClients",
+      "setAvatar"
+    ]),
     createGroup() {
       try {
         if (!this.roomIdInput) throw new Error("房间名称不能为空");
@@ -115,10 +116,6 @@ export default {
         });
       }
     },
-    handleAvatarSuccess(res, file) {
-      console.log(res)
-      this.imageUrl = URL.createObjectURL(file.raw);
-    },
     beforeAvatarUpload(file) {
       const isJPG = file.type === "image/jpeg";
       const isLt2M = file.size / 1024 / 1024 < 2;
@@ -130,10 +127,28 @@ export default {
         this.$message.error("上传头像图片大小不能超过 2MB!");
       }
       return isJPG && isLt2M;
+    },
+    cancelSubmit() {
+      this.dialogVisible = false;
+      this.imageUrl = "";
+    },
+    submit() {
+      this.$refs["upload"].submit();
+    },
+    changeAvatar(file, fileList) {
+      this.imageUrl = URL.createObjectURL(file.raw);
+    },
+    successAvatarUpload(response, file, fileList) {
+      try {
+        let { message, path } = response;
+        this.setAvatar(path);
+        this.dialogVisible = false;
+        this.imageUrl = "";
+      } catch (err) {}
     }
   },
   computed: {
-    ...mapState(["userName", "loginState", "groupLists", "avatar"]),
+    ...mapState(["userName", "loginState", "groupLists", "avatar", "token"]),
     ...mapGetters(["getCurrentGroup"])
   }
 };

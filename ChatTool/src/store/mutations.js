@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import config from '../config'
 export default {
   set_token(state, token) { //这里的state对应着上面这个state
     state.token = token;
@@ -52,6 +53,6 @@ export default {
     }
   },
   setAvatar(state, path) {
-    state.avatar = path
+    state.avatar = `${config.IP}:${config.PORT}${path}?${Math.random()}`
   }
 }

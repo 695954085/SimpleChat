@@ -1,7 +1,7 @@
 export default {
   userId: '',
   userName: 'MrDefault',
-  avatar: '../assets/defaultAvatar.jpg',
+  avatar: 'http://localhost:3000/default.jpg',
   token: '',
   groupLists: [],
   loginState: false,

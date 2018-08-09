@@ -10,7 +10,7 @@
         <p>在线成员</p>
         <ul class="module-online-mumber">
           <li v-for="member in members" :key="member.sid">
-            <img class="chat-float-mumber-avatar" />
+            <img class="chat-float-mumber-avatar" :ref='member.username + "_avatar"' />
             <p class="chat-float-mumber-name">{{member.username}}</p>
           </li>
         </ul>
@@ -19,7 +19,7 @@
   </div>
 </template>
 <script>
-import { mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapMutations, mapState } from "vuex";
 export default {
   name: "FloatPanel",
   props: ["roomId"],
@@ -47,12 +47,21 @@ export default {
     }
   },
   computed: {
+    // 对象扩展
     ...mapGetters(["getCurrentGroup"]),
+    ...mapState(["avatar"]),
     members() {
       if (this.getCurrentGroup(this.roomId))
         return this.getCurrentGroup(this.roomId).onlineClients;
       return null;
     }
+  },
+  updated() {
+    this.members.forEach(member => {
+      let { username } = member;
+      let ref = username + "_avatar";
+      this.$refs[ref][0].setAttribute('src', 'http://localhost:3000/'+ref+'.jpg');
+    });
   }
 };
 </script>

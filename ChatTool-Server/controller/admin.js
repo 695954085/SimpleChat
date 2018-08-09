@@ -61,7 +61,7 @@ class Admin {
 					client.setUser(content)
 					res.send(Object.assign(content, { token }));
 				} else {
-					next(createError(400, 'sid匹配不到client'))
+					next(createError(400, 'sid匹配不到client, 登录失败'))
 				}
 			})
 		} catch (err) {
@@ -103,35 +103,44 @@ class Admin {
 		}
 	}
 
-	signOut(req, res, next) {
+	/**
+	 * 登出不验证token是否过期了，因为无论是否过期，都按过期处理就是了
+	 * @param {Request} req
+	 * @param {Response} res
+	 * @param {*} next
+	 */
+	async signOut(req, res, next) {
 		// 删除token？
 		// 1. 如果登出也认证token，那么如果token已经过期了，那么就不能登出了
-		var { username } = req.body;
-		// 如果这个authorization不为空
-		if (!_.isNil(req.headers['authorization'])) {
-			var token = req.headers['authorization'].split(" ")[1];
-			User.findOneAsync({ username: username }).then(doc => {
-				if (_.isEqual(token, doc.token)) {
+		try {
+			let { username } = req.body;
+			if (!username) {
+				next(createError(400, 'username不能为空'))
+				return
+			}
+			// 如果这个authorization不为空
+			if (!_.isNil(req.headers['authorization'])) {
+				let token = req.headers['authorization'].split(" ")[1];
+				let user = User.findOneAsync({ username: username })
+				if (_.isEqual(token, user.token)) {
 					// 如果相等，那么清除token
-					doc.token = "";
-					doc.saveAsync();
-
+					user.token = "";
+					await user.saveAsync();
 					// socketDb清除数据
 					let client = socketDb.getClientByUserName(username)
 					if (client) {
 						socketDb.logout(client)
 					}
+					res.send({
+						message: "退出成功"
+					})
+				} else {
+					next(createError(400, '找不到用户，登出失败'))
 				}
-				res.send({
-					message: "退出成功"
-				})
-				return;
-			}).catch(rejection => {
-				next(rejection);
-				return;
-			});
-		} else {
-			next(createError(500, '嘻嘻嘻，后续处理'));
+			}
+		} catch (err) {
+			console.log(chalk.red(err))
+			next(createError(400, '登出失败'))
 		}
 	}
 
@@ -175,7 +184,8 @@ class Admin {
 					}
 					let { username } = fields;
 					let extName = path.extname(files['avatar'].name)
-					await fs.rename(files['avatar'].path, path.join(__dirname, '../public', `${username}_avatar${extName}`))
+					await fs.renameAsync(files['avatar'].path, path.join(__dirname, '../public', `${username}_avatar${extName}`))
+					await User.updateOneAsync({ username }, { $set: { avatar: `/${username}_avatar${extName}` } })
 					res.send({
 						message: '头像上传成功',
 						path: `/${username}_avatar${extName}`
