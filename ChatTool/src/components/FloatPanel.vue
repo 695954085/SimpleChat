@@ -57,11 +57,15 @@ export default {
     }
   },
   updated() {
-    this.members.forEach(member => {
-      let { username } = member;
-      let ref = username + "_avatar";
-      this.$refs[ref][0].setAttribute('src', 'http://localhost:3000/'+ref+'.jpg');
-    });
+    if (this.members)
+      this.members.forEach(member => {
+        let { username } = member;
+        let ref = username + "_avatar";
+        this.$refs[ref][0].setAttribute(
+          "src",
+          "http://localhost:3000/" + ref + ".jpg"
+        );
+      });
   }
 };
 </script>

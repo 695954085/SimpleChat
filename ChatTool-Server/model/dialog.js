@@ -4,13 +4,14 @@ import mongoose from 'mongoose'
 var dialogSchema = mongoose.Schema({
   userList: [String], // 用户列表
   owner: String, // 群主
-  roomId: String, 
+  roomId: String,
   conversation: [{
     content: String,
     date: Date,
     username: String,
     contentType: String // 内容的类型 文字，图片，语音
-  }]
+	}],
+	aliases: String //别名
 })
 
 const Dialog = mongoose.model('dialog', dialogSchema);

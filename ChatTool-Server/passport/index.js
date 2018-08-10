@@ -6,17 +6,24 @@ import config from 'config'
 const Strategy = passportHttpBearer.Strategy
 
 export default function (passport) {
-  return passport.use(new Strategy(function (token, done) {
-    jwt.verify(token, config.get('Customer.jwtSecret'), function (err, decoded) {
-      if (err) {
-        return done(err)
-      }
-      let { username } = decoded
-      User.findOne({ username, token }, function (err, user) {
-        if (err) { return done(err); }
-        if (!user) { return done(null, false); }
-        return done(null, user, { scope: 'all' });
-      });
-    })
-  }))
+	return passport.use(new Strategy(async function (token, done) {
+		let decoded
+		try {
+			decoded = await jwt.verifyAsync(token, config.get('Customer.jwtSecret'))
+		} catch (err) {
+			if (err.name === 'TokenExpiredError') {
+				decoded = jwt.decode(token)
+				return done(err, decoded.username)
+			}
+			return done(err)
+		}
+		try {
+			let { username } = decoded
+			let query = User.findOne({ username, token })
+			let user = await query.exec()
+			done(null, user, { scope: 'all' })
+		} catch (err) {
+			done(null, false)
+		}
+	}))
 }

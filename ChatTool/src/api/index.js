@@ -7,7 +7,7 @@ import config from '../config'
 axios.interceptors.request.use(config => {
   //判断是否存在token，如果存在将每个请求header都添加token
   if (store.state.token) {
-    config.headers.common['Authentication'] = 'bearer ' + store.state.token;
+    config.headers.common['Authorization'] = 'bearer ' + store.state.token;
   }
   return config;
 }, error => {
@@ -39,3 +39,16 @@ export const login = params => axios.post(`${config.IP}:${config.PORT}/v1/login`
 
 export const register = params => axios.post(`${config.IP}:${config.PORT}/v1/user`, params);
 
+// 获取某个房间的conversation
+export const conversation = params => {
+  let { roomId, start, end } = params
+  if (!roomId || !start || !end)
+    throw '入参缺少'
+  return axios.get(`${config.IP}:${config.PORT}/v2/${roomId}/conversation?start=${start}&end=${end}`)
+}
+
+// 获取用户拥有的房间
+export const rooms = username => axios.get(`${config.IP}:${config.PORT}/v2/${username}/rooms`)
+
+// 获取某个房间的详情
+export const details = roomId => axios.get(`${config.IP}:${config.PORT}/v2/${roomId}/details`)

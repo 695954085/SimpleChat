@@ -47,7 +47,7 @@ class Admin {
 					return;
 				}
 				// 生成token
-				let token = await jwt.signAsync({ username }, config.get("Customer.jwtSecret"), { expiresIn: '1h' })
+				let token = await jwt.signAsync({ username }, config.get("Customer.jwtSecret"), { expiresIn: '1s' })
 				user.token = token;
 				user = await user.save()
 				let content = {
