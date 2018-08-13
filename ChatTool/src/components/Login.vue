@@ -37,7 +37,7 @@
   </div>
 </template>
 <script>
-import { mapMutations, mapState } from "vuex";
+import { mapMutations, mapState, mapGetters } from "vuex";
 import { login, register, rooms } from "../api";
 export default {
   name: "Login",
@@ -116,7 +116,6 @@ export default {
               this.addGroup({
                 roomId: "all_public_connect"
               });
-              this.addConversation({ roomId: "all_public_connect" });
               // 7. 路由跳转
               this.$router.push(`/all_public_connect`);
               // 8. 设置登录状态为true并关闭登录框
@@ -129,14 +128,18 @@ export default {
           value => {
             let { status, data } = value;
             if (status === 200) {
-              let {username, rooms} = data
+              let { username, rooms } = data;
               // 保存这些房间信息
-              console.log(data);
+              for (let room of rooms) {
+                if (!this.isContainsRoom(room.roomId)) {
+                  this.addGroup(room);
+                }
+              }
             }
           },
           reason => {
             this.$message({
-              message: '获取房间失败',
+              message: "获取房间失败",
               type: "error"
             });
           }
@@ -173,7 +176,8 @@ export default {
     }
   },
   computed: {
-    ...mapState(["token"])
+    ...mapState(["token"]),
+    ...mapGetters(["isContainsRoom"])
   }
 };
 </script>

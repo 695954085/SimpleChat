@@ -53,6 +53,7 @@ export default {
     };
   },
   methods: {
+    ...mapMutations(["addConversation"]),
     sendMessage() {
       if (this.textarea != "") {
         let chatmessage = {
@@ -74,7 +75,9 @@ export default {
             //消息发送成功
             //插入到groupLists中
             let currentGroup = this.getCurrentGroup(this.roomId);
-            currentGroup.conversation.push(chatmessage);
+            this.addConversation(
+              Object.assign({}, { roomId: this.roomId }, { val: chatmessage })
+            );
             this.textarea = "";
           }
           if (error === 0) {

@@ -27,8 +27,27 @@ export default {
   },
   methods: {
     groupClick(index) {
-      this.$router.push({ path: "/" + this.groupLists[index].roomId });
-      this.selectedIndex = index;
+      // 需要判断是够已经加入此群？？？ 但是如何判断是够已经加入呢？
+      try {
+        //1. 创建房间
+        this.$socket.emit("createRoom", this.groupLists[index].roomId, val => {
+          // 2. 房间创建成功
+          let { message, error } = val;
+          if (error == 1) {
+            this.$message({
+              message: err.message || "房间创建异常",
+              type: "error"
+            });
+          } else {
+            this.$message({
+              message: message,
+              type: "success"
+            });
+            this.$router.push({ path: "/" + this.groupLists[index].roomId });
+            this.selectedIndex = index;
+          }
+        });
+      } catch (err) {}
     }
   }
 };

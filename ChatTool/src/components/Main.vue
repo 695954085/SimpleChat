@@ -63,7 +63,7 @@ export default {
   },
   sockets: {
     online(val) {
-      console.log(val);
+      console.log(val)
       if (val) {
         this.updateOnlineClients(val);
       }

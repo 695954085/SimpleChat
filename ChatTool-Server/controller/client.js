@@ -97,10 +97,11 @@ class Client {
 			// 1. client所添加的room都离开
 			// 2. 如果room没有用户了，就删除
 			// 3. 通知所有用户
-			this.rooms.forEach(roomId => {
+			let copyRooms = this.rooms.slice(0, this.rooms.length)
+			this.socketDb.removeClient(this)
+			copyRooms.forEach(roomId => {
 				this._sendOnlineMessage(roomId)
 			})
-			this.socketDb.removeClient(this)
 		} catch (err) {
 			console.log(chalk.red(err))
 		}
@@ -165,9 +166,17 @@ class Client {
 					})
 					this._sendOnlineMessage(newRoomId)
 				})
+			} else {
+				callback({
+					message: `已经加入${newRoomId}房间`,
+					error: -1
+				})
 			}
 		} catch (err) {
-			console.log(chalk.red(err))
+			callback({
+				message: err.message || '服务器异常',
+				error: 0
+			})
 		}
 	}
 
@@ -202,7 +211,7 @@ class Client {
 			switch (type) {
 				case 'privateMessage':
 				case 'roomMessage':
-					this._sendRoomAndProvateMessage(message, callback)
+					this._sendRoomAndPrivateMessage(message, callback)
 					break;
 				case 'hallMessage':
 				default:
@@ -226,9 +235,9 @@ class Client {
 		})
 	}
 
-	_sendRoomAndProvateMessage(message, callback) {
+	_sendRoomAndPrivateMessage(message, callback) {
 		try {
-			let { roomId, value } = message
+			let { roomId, value, contentType,  } = message
 			// 判断这个socket是够属于该房间
 			if (this.rooms.indexOf(roomId) === -1) {
 				console.log(chalk.red(`${this.user.username}不拥有${roomId}房间`))
