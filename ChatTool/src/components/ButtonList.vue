@@ -7,31 +7,41 @@
   </ul>
 </template>
 <script>
+import { signOut } from "@/api";
+import { mapState, mapMutations } from "vuex";
 export default {
   name: "ButtonList",
   data() {
     return {};
   },
   methods: {
-    handleLoginOut() {
-      this.$http({
-        url: `http://127.0.0.1:3000/v1/signout`,
-        method: "post",
-        data: this.$store.state.userName
-      })
-        .then(res => {
-          console.log(res);
-          if (res.status === 200) {
-            //删除token,清除sessionstorage,路由置回登录界面,并把登录状态设置为false
-            $store.commit('del_token');
-            this.$router.push({path:""});
-            this.$store.state.loginState = false;
-          }
-        })
-        .catch(res => {
-          console.log("登出错误: ", res);
+    ...mapMutations(["clearData"]),
+    async handleLoginOut() {
+      let params = new URLSearchParams()
+      params.append('username', this.userName)
+      try {
+        let respnse = await signOut(params);
+        let { data, status } = respnse;
+        if (status !== 200) {
+          throw "登出失败";
+        }
+        let { message } = data;
+        this.$message({
+          type: "success",
+          message: message
         });
+        this.clearData();
+        this.$router.push("/");
+      } catch (err) {
+        this.$message({
+          message: err.message || "登出失败",
+          type: 'error'
+        });
+      }
     }
+  },
+  computed: {
+    ...mapState(["userName"])
   }
 };
 </script>

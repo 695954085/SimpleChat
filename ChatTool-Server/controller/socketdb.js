@@ -30,7 +30,6 @@ class SocketDB {
 		this.io = io
 	}
 
-	// 获取房间所有房间id
 	isExitsRoom(roomId) {
 		return this.rooms.get(roomId) ? true : false
 	}
@@ -76,20 +75,9 @@ class SocketDB {
 		let index = this.clients.indexOf(client)
 		if (index !== -1) {
 			// 删除房间中的client
-			let clientRooomIds = client.getRooms()
-			if (clientRooomIds.length > 0) {
-				while (clientRooomIds.length > 0) {
-					let roomId = clientRooomIds.pop()
-					let room = this.rooms.get(roomId)
-					room.leaveRoom(client)
-					if (room.getRoomClientCount() === 0) {
-						this.rooms.delete(roomId)
-					}
-				}
-			}
 			client.logout(`${client.user.username}客户端主动退出登录`)
-			console.log(chalk.red(`${client.socket.id} 删除成功`))
 		}
+		console.log(chalk.red(`${client.socket.id} 删除成功`))
 	}
 
   /**

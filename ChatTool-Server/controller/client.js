@@ -59,13 +59,6 @@ class Client {
 			// 1. room删除client对象
 			room.leaveRoom(this)
 			// 2. 数据库dialog userList删除user
-			// Dialog.updateOne({ roomId: roomId }, { $pull: { userList: this.user.username } }, (err, dialog) => {
-			//   if (err) {
-			//     console.log(chalk.red(err))
-			//     return
-			//   }
-			//   console.log(chalk.green(dialog))
-			// })
 			let query = Dialog.updateOne({ roomId: roomId }, { $pull: { userList: this.user.username } })
 			let dialog = await query.exec()
 			console.log(chalk.green(dialog))
@@ -97,11 +90,12 @@ class Client {
 			// 1. client所添加的room都离开
 			// 2. 如果room没有用户了，就删除
 			// 3. 通知所有用户
-			let copyRooms = this.rooms.slice(0, this.rooms.length)
+			let copyRooms = this.rooms.slice(0)
 			this.socketDb.removeClient(this)
 			copyRooms.forEach(roomId => {
 				this._sendOnlineMessage(roomId)
 			})
+			this.user = null
 		} catch (err) {
 			console.log(chalk.red(err))
 		}
@@ -111,17 +105,7 @@ class Client {
    * client退出登录
    */
 	logout(reason) {
-		try {
-			console.log(chalk.red(reason))
-			console.log(chalk.red(`${this.user.username} 退出登录`));
-			this.socket.leaveAll()
-			this.rooms.forEach(roomId => {
-				this._sendOnlineMessage(roomId)
-			})
-			this.user = null
-		} catch (err) {
-			console.log(chalk.red(err))
-		}
+		this.disconnect(reason)
 	}
 
   /**
@@ -237,7 +221,7 @@ class Client {
 
 	_sendRoomAndPrivateMessage(message, callback) {
 		try {
-			let { roomId, value, contentType,  } = message
+			let { roomId, value, contentType, } = message
 			// 判断这个socket是够属于该房间
 			if (this.rooms.indexOf(roomId) === -1) {
 				console.log(chalk.red(`${this.user.username}不拥有${roomId}房间`))

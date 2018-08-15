@@ -54,5 +54,9 @@ export default {
   },
   setAvatar(state, path) {
     state.avatar = `${config.IP}:${config.PORT}${path}?${Math.random()}`
+  },
+  clearData(state) {
+    state.groupLists = []
+    state.loginState = false
   }
 }

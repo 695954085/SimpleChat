@@ -52,3 +52,6 @@ export const rooms = username => axios.get(`${config.IP}:${config.PORT}/v2/${use
 
 // 获取某个房间的详情
 export const details = roomId => axios.get(`${config.IP}:${config.PORT}/v2/${roomId}/details`)
+
+// 退出登录
+export const signOut = params => axios.post(`${config.IP}:${config.PORT}/v1/signout`, params)

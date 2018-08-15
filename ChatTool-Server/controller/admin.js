@@ -121,7 +121,7 @@ class Admin {
 			// 如果这个authorization不为空
 			if (!_.isNil(req.headers['authorization'])) {
 				let token = req.headers['authorization'].split(" ")[1];
-				let user = User.findOneAsync({ username: username })
+				let user = await User.findOneAsync({ username: username })
 				if (_.isEqual(token, user.token)) {
 					// 如果相等，那么清除token
 					user.token = "";
@@ -132,7 +132,8 @@ class Admin {
 						socketDb.logout(client)
 					}
 					res.send({
-						message: "退出成功"
+						message: "退出成功",
+						error: -1
 					})
 				} else {
 					next(createError(400, '找不到用户，登出失败'))
