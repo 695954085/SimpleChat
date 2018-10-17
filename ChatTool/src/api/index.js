@@ -41,7 +41,11 @@ export const register = params => axios.post(`${config.IP}:${config.PORT}/v1/use
 
 // 获取某个房间的conversation
 export const conversation = params => {
-  let { roomId, start, end } = params
+  let {
+    roomId,
+    start,
+    end
+  } = params
   if (!roomId || !start || !end)
     throw '入参缺少'
   return axios.get(`${config.IP}:${config.PORT}/v2/${roomId}/conversation?start=${start}&end=${end}`)

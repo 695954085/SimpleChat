@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import ChatPanel from '@/components/ChatPanel'
 import MessageItem from '@/components/MessageItem'
+import EmotionPanel from '@/components/EmotionPanel'
 
 import Main from '@/components/Main'
 
@@ -11,12 +12,12 @@ const router = new Router({
   routes: [{
       path: '/',
       component: Main,
-      children: [{
-        path: '/*',
-        component: ChatPanel,
-        name: '',
-        hidden: false
-      }, ]
+      // children: [{
+      //   path: '/*',
+      //   component: ChatPanel,
+      //   name: '',
+      //   hidden: false
+      // }, ]
     },
     {
       path: '/Main',
@@ -39,6 +40,10 @@ const router = new Router({
       name: '',
       hidden: true,
     },
+    {
+      path: '/emotion',
+      component: EmotionPanel
+    }
   ]
 });
 

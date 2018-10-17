@@ -4,5 +4,5 @@ export default {
   avatar: 'http://localhost:3000/default.jpg',
   token: '',
   groupLists: [],
-  loginState: false,
+  loginState: true,
 }

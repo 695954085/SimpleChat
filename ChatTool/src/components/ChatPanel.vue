@@ -11,13 +11,11 @@
       </div>
       <div class="chat-window-footer" v-show="loginState">
         <div class="chat-footer-toolBar">
-          <a class="chatTool-emotion" title="表情">
-            <i></i>
-            <span>表情</span>
+          <a class="chatTool-emotion" title="表情" @click.stop="showEmotionPanel($event)">
+            <i class="icon iconfont el-icon-power-biaoqing"></i>
           </a>
-          <a class="chatTool-fileChat" title="发送文件">
-            <i></i>
-            <span>文件</span>
+          <a class="chatTool-fileChat" title="发送图片" >
+            <i class="icon iconfont el-icon-power-tupian"></i>
           </a>
         </div>
         <div class="chat-footer-editor">
@@ -27,6 +25,7 @@
           <button class="chat-endContact" style="display:none;">结束会话</button>
           <button class="chat-sendBtn" @click="sendMessage">发送(S)</button>
         </div>
+        <EmotionPanel v-show="showEmotion" :emotionEle='emotionEle' ref="emotionbar" @ee="insertEmotion"></EmotionPanel>
       </div>
       <Login v-show="!loginState"></Login>
     </div>
@@ -37,6 +36,8 @@
 import MessageItem from "@/components/MessageItem";
 import FloatPanel from "@/components/FloatPanel";
 import Login from "@/components/Login";
+import EmotionPanel from "@/components/EmotionPanel";
+import { login, register } from "../api";
 import { mapState, mapMutations, mapGetters } from "vuex";
 
 export default {
@@ -44,12 +45,15 @@ export default {
   components: {
     MessageItem: MessageItem,
     FloatPanel: FloatPanel,
-    Login: Login
+    Login: Login,
+    EmotionPanel: EmotionPanel
   },
   data() {
     return {
       textarea: "",
-      showOnline: false
+      showOnline: false,
+      showEmotion: false,
+      emotionEle: "chatTool-emotion"
     };
   },
   methods: {
@@ -114,6 +118,13 @@ export default {
         seperator2 +
         date.getSeconds();
       return currentdate;
+    },
+    showEmotionPanel(e) {
+      this.showEmotion = true;
+    },
+    insertEmotion(str) {
+      this.textarea += str;
+      this.showEmotion = false;
     }
   },
   computed: {
@@ -131,6 +142,9 @@ export default {
     document.addEventListener("click", ev => {
       if (this.$refs["main"] && !this.$refs["main"].$el.contains(ev.target)) {
         this.showOnline = false;
+      }
+      if (this.$refs["emotionbar"] && !this.$refs["emotionbar"].$el.contains(ev.target)) {
+        this.showEmotion = false;
       }
     });
   }
@@ -155,6 +169,7 @@ export default {
 
 /*聊天窗口样式 begin*/
 $send-button-color: $theme-color;
+$toolBar-height: 30px;
 
 .chat-content-window {
   font-size: 0.8rem;
@@ -178,37 +193,23 @@ $send-button-color: $theme-color;
     width: 100%;
     background-color: hsla(0, 0%, 100%, 0.5);
     .chat-footer-toolBar {
-      height: 24px;
-      line-height: 24px;
-      text-align: left;
+      height: $toolBar-height;
+      line-height: $toolBar-height;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
       a {
         color: $font-color;
-        display: inline-block;
+        padding: 10px;
         height: 100%;
         line-height: 100%;
-        padding: 0 2px;
+
         cursor: pointer;
-        span {
-          height: 100%;
-          line-height: 24px;
-          float: left;
+        &:hover {
+          color: $theme-color-heavry;
         }
         i {
-          width: 16px;
-          height: 16px;
-          margin-top: 4px;
-          float: left;
-        }
-      }
-      a:nth-child(1) {
-        i {
-          background-image: url(../assets/chatTool/emotion.png);
-        }
-      }
-      a:nth-child(2) {
-        position: relative;
-        i {
-          background-image: url(../assets/chatTool/sendfile.png);
+          font-size: 1.6rem;
         }
       }
     }
@@ -239,7 +240,7 @@ $send-button-color: $theme-color;
     background-color: transparent;
     padding-left: 1rem;
     border: none;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     font-family: "Avenir", Helvetica, Arial, sans-serif;
     color: $font-color;
   }

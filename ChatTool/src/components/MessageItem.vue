@@ -3,26 +3,29 @@
     <div :class="'chatTool-message-list-time-'+direction">{{content.username}}({{content.date}})</div>
     <div :class="'chatTool-message-container-'+direction">
       <span class="chatTool-message-triangle-left" v-if="showPrise1"></span>
-      <div :class="'chatTool-message-article-'+direction">{{content.value}}</div>
+      <div :class="'chatTool-message-article-'+direction">{{resolveT2E}}</div>
       <span class="chatTool-message-triangle-right" v-if="showPrise2"></span>
     </div>
   </div>
 </template>
 <script>
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
+import emotionparse from "../assets/js/emotionparse";
+
 export default {
   name: "MessageItem",
-  props: ['content'],
+  props: ["content"],
   data() {
     return {
       showPrise1: false,
-      showPrise2: false
+      showPrise2: false,
+      resolveT2E: ""
     };
   },
-  computed:{
-    ...mapState(['userName']),
-    direction(){
-      return this.content.username === this.userName ?  'right' : 'left'
+  computed: {
+    ...mapState(["userName"]),
+    direction() {
+      return this.content.username === this.userName ? "right" : "left";
     }
   },
   mounted: function() {
@@ -31,6 +34,7 @@ export default {
     } else {
       this.showPrise2 = true;
     }
+    this.resolveT2E = emotionparse.resolveTextToEmotion(content.value);
   }
 };
 </script>
